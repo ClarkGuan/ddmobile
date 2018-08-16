@@ -29,7 +29,7 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 	)
 
 	// Disable DWARF; see golang.org/issues/25148.
-	if strings.Contains(buildLdflags, "-w") {
+	if !strings.Contains(buildLdflags, "-w") {
 		buildLdflags += " -w"
 	}
 
