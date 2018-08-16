@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
@@ -26,13 +27,17 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 		"-o", libPath,
 		"-create",
 	)
+
+	// Disable DWARF; see golang.org/issues/25148.
+	if strings.Contains(buildLdflags, "-w") {
+		buildLdflags += " -w"
+	}
+
 	//var nmpkgs map[string]bool
 	for _, arch := range archs {
 		archPath := filepath.Join(tmpdir, arch, libName)
-		// Disable DWARF; see golang.org/issues/25148.
 		if err := goBuild(src, darwinEnv[arch],
 			"-buildmode=c-archive",
-			"-ldflags=-w",
 			"-o="+archPath); err != nil {
 			return nil, err
 		}
