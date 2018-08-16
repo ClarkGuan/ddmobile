@@ -19,7 +19,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	libName := androidPkgName(appName)
 
 	libFiles := []string{}
-	nmpkgs := make(map[string]map[string]bool) // map: arch -> extractPkgs' output
+	//nmpkgs := make(map[string]map[string]bool) // map: arch -> extractPkgs' output
 	var err error
 
 	for _, arch := range androidArchs {
@@ -39,10 +39,10 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 		if err != nil {
 			return nil, err
 		}
-		nmpkgs[arch], err = extractPkgs(toolchain.Path("nm"), libAbsPath)
-		if err != nil {
-			return nil, err
-		}
+		//nmpkgs[arch], err = extractPkgs(toolchain.Path("nm"), libAbsPath)
+		//if err != nil {
+		//	return nil, err
+		//}
 		libFiles = append(libFiles, libPath)
 	}
 
