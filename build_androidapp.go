@@ -26,7 +26,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 		env := androidEnv[arch]
 		toolchain := ndk.Toolchain(arch)
 		libPath := "android/lib/" + toolchain.abi + "/lib" + libName + ".so"
-		libAbsPath := libPath // filepath.Join(tmpdir, libPath)
+		libAbsPath := filepath.Join(buildO, libPath)
 		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
 			return nil, err
 		}

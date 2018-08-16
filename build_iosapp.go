@@ -15,7 +15,7 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 	src := pkg.ImportPath
 	appName := path.Base(pkg.ImportPath)
 	libName := "lib" + appName + ".a"
-	libPath := "ios/" + libName
+	libPath := filepath.Join(buildO, "ios", libName)
 	if err := mkdir(filepath.Dir(libPath)); err != nil {
 		return nil, err
 	}
