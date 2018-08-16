@@ -218,16 +218,17 @@ func printcmd(format string, args ...interface{}) {
 
 // "Build flags", used by multiple commands.
 var (
-	buildA        bool   // -a
-	buildI        bool   // -i
-	buildN        bool   // -n
-	buildV        bool   // -v
-	buildX        bool   // -x
-	buildO        string // -o
-	buildGcflags  string // -gcflags
-	buildLdflags  string // -ldflags
-	buildTarget   string // -target
-	buildWork     bool   // -work
+	buildA       bool   // -a
+	buildI       bool   // -i
+	buildN       bool   // -n
+	buildV       bool   // -v
+	buildX       bool   // -x
+	buildO       string // -o
+	buildPie     bool   //-pie
+	buildGcflags string // -gcflags
+	buildLdflags string // -ldflags
+	buildTarget  string // -target
+	buildWork    bool   // -work
 	//buildBundleID string // -bundleid
 )
 
@@ -240,6 +241,7 @@ func addBuildFlags(cmd *command) {
 
 	cmd.flag.BoolVar(&buildA, "a", false, "")
 	cmd.flag.BoolVar(&buildI, "i", false, "")
+	cmd.flag.BoolVar(&buildPie, "pie", false, "")
 	cmd.flag.Var((*stringsFlag)(&ctx.BuildTags), "tags", "")
 }
 

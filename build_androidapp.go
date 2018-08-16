@@ -21,11 +21,18 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	libFiles := []string{}
 	//nmpkgs := make(map[string]map[string]bool) // map: arch -> extractPkgs' output
 	var err error
+	buildmode := "-buildmode=c-shared"
+	if buildPie {
+		buildmode = "-buildmode=pie"
+	}
 
 	for _, arch := range androidArchs {
 		env := androidEnv[arch]
 		toolchain := ndk.Toolchain(arch)
 		libPath := "android/lib/" + toolchain.abi + "/lib" + libName + ".so"
+		if buildPie {
+			libPath = "android/app/" + toolchain.abi + "/" + libName
+		}
 		libAbsPath := filepath.Join(buildO, libPath)
 		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
 			return nil, err
@@ -33,7 +40,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 		err = goBuild(
 			pkg.ImportPath,
 			env,
-			"-buildmode=c-shared",
+			buildmode,
 			"-o", libAbsPath,
 		)
 		if err != nil {

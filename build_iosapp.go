@@ -30,7 +30,10 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 	for _, arch := range archs {
 		archPath := filepath.Join(tmpdir, arch, libName)
 		// Disable DWARF; see golang.org/issues/25148.
-		if err := goBuild(src, darwinEnv[arch], "-ldflags=-w", "-o="+archPath); err != nil {
+		if err := goBuild(src, darwinEnv[arch],
+			"-buildmode=c-archive",
+			"-ldflags=-w",
+			"-o="+archPath); err != nil {
 			return nil, err
 		}
 		//if nmpkgs == nil {
