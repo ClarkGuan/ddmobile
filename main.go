@@ -153,7 +153,7 @@ func helpDocumentation(path string) {
 		w.WriteString(cmd.Long)
 	}
 
-	w.WriteString("*/\npackage main // import \"golang.org/x/mobile/cmd/ddmobile\"\n")
+	w.WriteString("*/\npackage main // import \"github.com/ClarkGuan/ddmobile\"\n")
 
 	if err := ioutil.WriteFile(path, w.Bytes(), 0666); err != nil {
 		log.Fatal(err)
@@ -188,7 +188,7 @@ var usageTmpl = template.Must(template.New("usage").Parse(
 
 To install:
 
-	$ go get golang.org/x/mobile/cmd/ddmobile
+	$ go get github.com/ClarkGuan/ddmobile
 	$ ddmobile init
 
 At least Go 1.7 is required.

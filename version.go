@@ -24,7 +24,7 @@ Version prints versions of the ddmobile binary and tools
 }
 
 func runVersion(cmd *command) (err error) {
-	// Check this binary matches the version in golang.org/x/mobile/cmd/ddmobile
+	// Check this binary matches the version in github.com/ClarkGuan/ddmobile
 	// source code in GOPATH. If they don't match, currently there is no
 	// way to reliably identify the revision number this binary was built
 	// against.
@@ -34,7 +34,7 @@ func runVersion(cmd *command) (err error) {
 			return "", err
 		}
 		bindir := filepath.Dir(bin)
-		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "golang.org/x/mobile/cmd/ddmobile")
+		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "github.com/ClarkGuan/ddmobile")
 		cmd.Env = append(os.Environ(), "GOBIN="+bindir)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
