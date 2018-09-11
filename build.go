@@ -272,6 +272,20 @@ func init() {
 	addBuildFlagsNVXWork(cmdClean)
 }
 
+func goBuildWithDir(dir, src string, env []string, args ...string) (err error) {
+	var curDir string
+	if curDir, err = os.Getwd(); err != nil {
+		return
+	}
+	defer os.Chdir(curDir)
+
+	if err = os.Chdir(dir); err != nil {
+		return
+	}
+
+	return goBuild(src, env, args...)
+}
+
 func goBuild(src string, env []string, args ...string) error {
 	return goCmd("build", []string{src}, env, args...)
 }
