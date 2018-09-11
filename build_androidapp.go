@@ -18,7 +18,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	appName := path.Base(pkg.ImportPath)
 	libName := androidPkgName(appName)
 
-	libFiles := []string{}
+	var libFiles []string
 	//nmpkgs := make(map[string]map[string]bool) // map: arch -> extractPkgs' output
 	var err error
 	buildmode := "-buildmode=c-shared"
@@ -37,12 +37,22 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
 			return nil, err
 		}
-		err = goBuild(
-			pkg.ImportPath,
-			env,
-			buildmode,
-			"-o", libAbsPath,
-		)
+
+		if buildPie {
+			err = goBuild(
+				pkg.ImportPath,
+				env,
+				buildmode,
+				"-o", libAbsPath,
+			)
+		} else {
+			err = goBuildWithDir(
+				filepath.Dir(libAbsPath),
+				pkg.ImportPath,
+				env,
+				buildmode)
+		}
+
 		if err != nil {
 			return nil, err
 		}
