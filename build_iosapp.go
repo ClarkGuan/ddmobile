@@ -16,15 +16,20 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 	src := pkg.ImportPath
 	appName := path.Base(pkg.ImportPath)
 	libName := "lib" + appName + ".a"
-	libPath := filepath.Join(buildO, "ios", libName)
-	if err := mkdir(filepath.Dir(libPath)); err != nil {
-		return nil, err
+	combLibPath := filepath.Join(buildO, "ios", libName)
+	libPaths := map[string]string{}
+	for _, arch := range archs {
+		libPath := filepath.Join(buildO, "ios", arch, libName)
+		libPaths[arch] = libPath
+		if err := mkdir(filepath.Dir(libPath)); err != nil {
+			return nil, err
+		}
 	}
 
 	// We are using lipo tool to build multiarchitecture binaries.
 	cmd := exec.Command(
 		"xcrun", "lipo",
-		"-o", libPath,
+		"-o", combLibPath,
 		"-create",
 	)
 
@@ -34,22 +39,31 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 	}
 
 	//var nmpkgs map[string]bool
-	for _, arch := range archs {
-		archPath := filepath.Join(tmpdir, arch, libName)
+	for arch, libPath := range libPaths {
 		if err := goBuild(src, darwinEnv[arch],
 			"-buildmode=c-archive",
-			"-o="+archPath); err != nil {
+			"-o="+filepath.Dir(libPath)); err != nil {
 			return nil, err
 		}
-		//if nmpkgs == nil {
-		//	var err error
-		//	nmpkgs, err = extractPkgs(darwinArmNM, archPath)
-		//	if err != nil {
-		//		return nil, err
-		//	}
-		//}
-		cmd.Args = append(cmd.Args, archPath)
+
+		cmd.Args = append(cmd.Args, libPath)
 	}
+	//for _, arch := range archs {
+	//archPath := filepath.Join(tmpdir, arch, libName)
+	//if err := goBuild(src, darwinEnv[arch],
+	//"-buildmode=c-archive",
+	//"-o="+archPath); err != nil {
+	//return nil, err
+	//}
+	//if nmpkgs == nil {
+	//	var err error
+	//	nmpkgs, err = extractPkgs(darwinArmNM, archPath)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//}
+	//cmd.Args = append(cmd.Args, archPath)
+	//}
 
 	if err := runCmd(cmd); err != nil {
 		return nil, err
