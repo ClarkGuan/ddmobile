@@ -19,7 +19,7 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 	combLibPath := filepath.Join(buildO, "ios", libName)
 	libPaths := map[string]string{}
 	for _, arch := range archs {
-		libPath := filepath.Join(buildO, "ios", arch, libName)
+		libPath := filepath.Join(buildO, "ios", arch, appName + ".a")
 		libPaths[arch] = libPath
 		if err := mkdir(filepath.Dir(libPath)); err != nil {
 			return nil, err
@@ -40,9 +40,8 @@ func goIOSBuild(pkg *build.Package, archs []string) (map[string]bool, error) {
 
 	//var nmpkgs map[string]bool
 	for arch, libPath := range libPaths {
-		if err := goBuild(src, darwinEnv[arch],
-			"-buildmode=c-archive",
-			"-o="+filepath.Dir(libPath)); err != nil {
+		if err := goBuildWithDir(filepath.Dir(libPath), src, darwinEnv[arch],
+			"-buildmode=c-archive"); err != nil {
 			return nil, err
 		}
 
