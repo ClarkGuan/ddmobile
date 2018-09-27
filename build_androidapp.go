@@ -7,6 +7,7 @@ package main
 import (
 	"errors"
 	"go/build"
+	"os"
 	"path"
 	"path/filepath"
 )
@@ -18,7 +19,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	appName := path.Base(pkg.ImportPath)
 	libName := androidPkgName(appName)
 
-	var libFiles []string
+	//var libFiles []string
 	//nmpkgs := make(map[string]map[string]bool) // map: arch -> extractPkgs' output
 	var err error
 	buildmode := "-buildmode=c-shared"
@@ -51,6 +52,11 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 				pkg.ImportPath,
 				env,
 				buildmode)
+
+			// 将 libName -> lib{libname}.so
+			if err == nil {
+				err = os.Rename("android/lib/" + toolchain.abi + "/" + libName, libPath)
+			}
 		}
 
 		if err != nil {
@@ -60,7 +66,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 		//if err != nil {
 		//	return nil, err
 		//}
-		libFiles = append(libFiles, libPath)
+		//libFiles = append(libFiles, libPath)
 	}
 
 	return map[string]bool{"golang.org/x/mobile/app": true}, nil
