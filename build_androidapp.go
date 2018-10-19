@@ -30,9 +30,9 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	for _, arch := range androidArchs {
 		env := androidEnv[arch]
 		toolchain := ndk.Toolchain(arch)
-		libPath := "android/lib/" + toolchain.abi + "/lib" + libName + ".so"
+		libPath := "build/android/lib/" + toolchain.abi + "/lib" + libName + ".so"
 		if buildPie {
-			libPath = "android/app/" + toolchain.abi + "/" + libName
+			libPath = "build/android/app/" + toolchain.abi + "/" + libName
 		}
 		libAbsPath := filepath.Join(buildO, libPath)
 		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
@@ -55,7 +55,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 
 			// 将 libName -> lib{libname}.so
 			if err == nil {
-				err = os.Rename("android/lib/" + toolchain.abi + "/" + libName, libPath)
+				err = os.Rename("build/android/lib/" + toolchain.abi + "/" + libName, libPath)
 			}
 		}
 
