@@ -10,6 +10,8 @@ go get github.com/ClarkGuan/ddmobile
 
 #### 使用
 
+##### 1、初始化
+
 和 gomobile 类似，使用前我们运行命令
 
 ```bash
@@ -20,7 +22,7 @@ ddmobile init
 
 我们假设有一个 go 工程在 $GOPATH/src/hello_world 目录下，
 
-##### 1、Android 构建
+##### 2、Android 构建
 
 ```bash
 cd $GOPATH/src/hello_world
@@ -38,7 +40,7 @@ ddmobile build -pie
 
 这时生成的子目录为 build/android/app/。另：我们并没有特殊指明 `-target android/arm,android/arm64`，默认会产出 Android 所有支持的平台产物。
 
-##### 2、iOS 构建
+##### 3、iOS 构建
 
 ```bash
 cd $GOPATH/src/hello_world
