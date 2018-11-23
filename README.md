@@ -60,3 +60,49 @@ ddmobile build -target ios
 ```
 
 生成子目录 build/ios/。注意：与 Android 最大的不同是生成的是静态库文件（.a，经过 lipo 命令合并过的），并且在不同平台目录下还会有各自的静态库文件。
+
+#### 举例
+
+我们以可以在 Android 上运行的 HelloWorld 工程为例，创建目录
+
+```bash
+mkdir -p $GOPATH/src/hello
+cd $GOPATH/src/hello
+touch main.go
+```
+
+main.go 内容如下：
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	fmt.Println("Hello world")
+}
+```
+
+此时运行命令
+
+```bash
+ddmobile build -target android/arm -pie
+```
+
+使用我编写的另一个工具 arun（https://github.com/ClarkGuan/arun）：
+
+```bash
+arun -exe build/android/app/armeabi-v7a/hello
+```
+
+输出类似下面
+
+```
+prepare to push /Users/xxx/gopath/src/hello/build/android/app/armeabi-v7a/hello to device
+/Users/xxx/gopath/src/hello/build/android/app/armeabi-v7a/hello: 1 file pushed. 9.9 MB/s (1963673 bytes in 0.189s)
+[程序输出如下]
+Hello world
+[程序执行完毕]
+```
