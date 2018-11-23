@@ -22,6 +22,18 @@ ddmobile init
 
 我们假设有一个 go 工程在 $GOPATH/src/hello_world 目录下，
 
+Android 环境初始化依赖 NDK 工具，默认情况下会搜索如下环境变量：
+
+* ANDROID_HOME
+* ANDROID_SDK
+* NDK
+* NDK_HOME
+* NDK_PATH
+
+其中前两项实际上是指定 Android SDK 的位置，如果 SDK 中装有 NDK（ndk-bundle 目录）则使用该版本 NDK。
+
+iOS 环境初始化依赖 Xcode 以及相关命令行工具（xcrun 等）。
+
 ##### 2、Android 构建
 
 ```bash
