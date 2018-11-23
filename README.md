@@ -91,7 +91,7 @@ func main() {
 ddmobile build -target android/arm -pie
 ```
 
-使用我编写的另一个工具 arun（https://github.com/ClarkGuan/arun）：
+使用我编写的另一个工具 arun（ https://github.com/ClarkGuan/arun ）：
 
 ```bash
 arun -exe build/android/app/armeabi-v7a/hello
