@@ -97,7 +97,7 @@ ddmobile build -target android/arm -pie
 arun -exe build/android/app/armeabi-v7a/hello
 ```
 
-输出类似下面
+输出类似下面（我们假定您已经将 adb 命令加入到 $PATH 中）
 
 ```
 prepare to push /Users/xxx/gopath/src/hello/build/android/app/armeabi-v7a/hello to device
