@@ -108,7 +108,7 @@ func runInit(cmd *command) error {
 			return ""
 		}
 
-		envs := []string{"ANDROID_HOME", "ANDROID_SDK", "NDK", "NDK_HOME", "NDK_PATH"}
+		envs := []string{"NDK", "ANDROID_HOME", "ANDROID_SDK", "NDK_HOME", "NDK_PATH"}
 		for _, env := range envs {
 			if initNDK = ndkFinder(env); initNDK != "" {
 				break
