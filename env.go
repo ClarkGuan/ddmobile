@@ -271,7 +271,7 @@ var ndk = ndkConfig{
 	"arm": {
 		arch:       "arm",
 		abi:        "armeabi-v7a",
-		platform:   "android-15",
+		platform:   "android-21",
 		gcc:        "arm-linux-androideabi-4.9",
 		toolPrefix: "arm-linux-androideabi",
 	},
@@ -286,7 +286,7 @@ var ndk = ndkConfig{
 	"386": {
 		arch:       "x86",
 		abi:        "x86",
-		platform:   "android-15",
+		platform:   "android-21",
 		gcc:        "x86-4.9",
 		toolPrefix: "i686-linux-android",
 	},
