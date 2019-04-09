@@ -24,6 +24,54 @@ import (
 	"github.com/ClarkGuan/ddmobile/internal/binres"
 )
 
+func goAndroidBuildx(pkg *build.Package, androidArchs []string) (map[string]bool, error) {
+	_, err := ndkRoot()
+	if err != nil {
+		return nil, err
+	}
+
+	appName := path.Base(pkg.ImportPath)
+	libName := androidPkgName(appName)
+
+	if buildO == "" {
+		buildO = "build"
+	}
+
+	libPathFunc := func(chain ndkToolchain, libName string) string {
+		if buildExe {
+			return chain.abi + "/" + libName
+		} else {
+			return chain.abi + "/lib" + libName + ".so"
+		}
+	}
+
+	buildMode := "-buildmode=c-shared"
+	if buildExe {
+		buildMode = "-buildmode=exe"
+	}
+
+	for _, arch := range androidArchs {
+		env := androidEnv[arch]
+		toolchain := ndk.Toolchain(arch)
+		libPath := libPathFunc(toolchain, libName)
+		libAbsPath := filepath.Join(buildO, libPath)
+		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
+			return nil, err
+		}
+		err = goBuild(
+			pkg.ImportPath,
+			env,
+			buildMode,
+			"-o", libAbsPath,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return make(map[string]bool), nil
+}
+
 func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool, error) {
 	ndkRoot, err := ndkRoot()
 	if err != nil {

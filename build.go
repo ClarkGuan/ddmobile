@@ -117,7 +117,7 @@ func runBuild(cmd *command) (err error) {
 			}
 			return nil
 		}
-		nmpkgs, err = goAndroidBuild(pkg, targetArchs)
+		nmpkgs, err = goAndroidBuildx(pkg, targetArchs)
 		if err != nil {
 			return err
 		}
@@ -143,6 +143,7 @@ func runBuild(cmd *command) (err error) {
 		}
 	}
 
+	nmpkgs["golang.org/x/mobile/app"] = true  // 强制通过
 	if !nmpkgs["golang.org/x/mobile/app"] {
 		return fmt.Errorf(`%s does not import "golang.org/x/mobile/app"`, pkg.ImportPath)
 	}
@@ -230,6 +231,8 @@ var (
 	buildWork       bool   // -work
 	buildBundleID   string // -bundleid
 	buildIOSVersion string // -iosversion
+
+	buildExe bool // -exe
 )
 
 func addBuildFlags(cmd *command) {
@@ -250,6 +253,8 @@ func addBuildFlagsNVXWork(cmd *command) {
 	cmd.flag.BoolVar(&buildV, "v", false, "")
 	cmd.flag.BoolVar(&buildX, "x", false, "")
 	cmd.flag.BoolVar(&buildWork, "work", false, "")
+
+	cmd.flag.BoolVar(&buildExe, "exe", false, "")
 }
 
 type binInfo struct {
