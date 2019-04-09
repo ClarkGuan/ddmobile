@@ -13,9 +13,9 @@ var cmdClean = &command{
 	run:   runClean,
 	Name:  "clean",
 	Usage: "",
-	Short: "remove object files and cached ddmobile files",
+	Short: "remove object files and cached gomobile files",
 	Long: `
-Clean removes object files and cached NDK files downloaded by ddmobile init
+Clean removes object files and cached NDK files downloaded by gomobile init
 `,
 }
 
@@ -24,7 +24,7 @@ func runClean(cmd *command) (err error) {
 	if len(gopaths) == 0 {
 		return fmt.Errorf("GOPATH is not set")
 	}
-	gomobilepath = filepath.Join(gopaths[0], "pkg/ddmobile")
+	gomobilepath = filepath.Join(gopaths[0], "pkg/gomobile")
 	if buildX {
 		fmt.Fprintln(xout, "GOMOBILE="+gomobilepath)
 	}

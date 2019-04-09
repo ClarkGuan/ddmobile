@@ -41,14 +41,17 @@ instruction sets (arm, 386, amd64, arm64). A subset of instruction sets can
 be selected by specifying target type with the architecture name. E.g.
 -target=android/arm,android/386.
 
-For -target ios, ddmobile must be run on an OS X machine with Xcode
-installed. Support is not complete.
+For -target ios, gomobile must be run on an OS X machine with Xcode
+installed.
 
 If the package directory contains an assets subdirectory, its contents
 are copied into the output.
 
-The -bundleid flag is for -target ios only and sets the bundle ID to use
-with the app; defaults to "org.golang.todo".
+Flag -iosversion sets the minimal version of the iOS SDK to compile against.
+The default version is 7.0.
+
+The -bundleid flag is required for -target ios and sets the bundle ID to use
+with the app.
 
 The -o flag specifies the output file name. If not specified, the
 output file name depends on the package built.
@@ -131,7 +134,10 @@ func runBuild(cmd *command) (err error) {
 			}
 			return nil
 		}
-		nmpkgs, err = goIOSBuild(pkg, targetArchs)
+		if buildBundleID == "" {
+			return fmt.Errorf("-target=ios requires -bundleid set")
+		}
+		nmpkgs, err = goIOSBuild(pkg, buildBundleID, targetArchs)
 		if err != nil {
 			return err
 		}
@@ -201,14 +207,8 @@ func printcmd(format string, args ...interface{}) {
 	if gomobilepath != "" {
 		cmd = strings.Replace(cmd, gomobilepath, "$GOMOBILE", -1)
 	}
-	if goroot := goEnv("GOROOT"); goroot != "" {
-		cmd = strings.Replace(cmd, goroot, "$GOROOT", -1)
-	}
 	if gopath := goEnv("GOPATH"); gopath != "" {
 		cmd = strings.Replace(cmd, gopath, "$GOPATH", -1)
-	}
-	if env := os.Getenv("HOME"); env != "" {
-		cmd = strings.Replace(cmd, env, "$HOME", -1)
 	}
 	if env := os.Getenv("HOMEPATH"); env != "" {
 		cmd = strings.Replace(cmd, env, "$HOMEPATH", -1)
@@ -218,18 +218,18 @@ func printcmd(format string, args ...interface{}) {
 
 // "Build flags", used by multiple commands.
 var (
-	buildA       bool   // -a
-	buildI       bool   // -i
-	buildN       bool   // -n
-	buildV       bool   // -v
-	buildX       bool   // -x
-	buildO       string // -o
-	buildPie     bool   //-pie
-	buildGcflags string // -gcflags
-	buildLdflags string // -ldflags
-	buildTarget  string // -target
-	buildWork    bool   // -work
-	//buildBundleID string // -bundleid
+	buildA          bool   // -a
+	buildI          bool   // -i
+	buildN          bool   // -n
+	buildV          bool   // -v
+	buildX          bool   // -x
+	buildO          string // -o
+	buildGcflags    string // -gcflags
+	buildLdflags    string // -ldflags
+	buildTarget     string // -target
+	buildWork       bool   // -work
+	buildBundleID   string // -bundleid
+	buildIOSVersion string // -iosversion
 )
 
 func addBuildFlags(cmd *command) {
@@ -237,11 +237,11 @@ func addBuildFlags(cmd *command) {
 	cmd.flag.StringVar(&buildGcflags, "gcflags", "", "")
 	cmd.flag.StringVar(&buildLdflags, "ldflags", "", "")
 	cmd.flag.StringVar(&buildTarget, "target", "android", "")
-	//cmd.flag.StringVar(&buildBundleID, "bundleid", "org.golang.todo", "")
+	cmd.flag.StringVar(&buildBundleID, "bundleid", "", "")
+	cmd.flag.StringVar(&buildIOSVersion, "iosversion", "7.0", "")
 
 	cmd.flag.BoolVar(&buildA, "a", false, "")
 	cmd.flag.BoolVar(&buildI, "i", false, "")
-	cmd.flag.BoolVar(&buildPie, "pie", false, "")
 	cmd.flag.Var((*stringsFlag)(&ctx.BuildTags), "tags", "")
 }
 
@@ -261,29 +261,15 @@ func init() {
 	addBuildFlags(cmdBuild)
 	addBuildFlagsNVXWork(cmdBuild)
 
-	//addBuildFlags(cmdInstall)
-	//addBuildFlagsNVXWork(cmdInstall)
+	addBuildFlags(cmdInstall)
+	addBuildFlagsNVXWork(cmdInstall)
 
 	addBuildFlagsNVXWork(cmdInit)
 
-	//addBuildFlags(cmdBind)
-	//addBuildFlagsNVXWork(cmdBind)
+	addBuildFlags(cmdBind)
+	addBuildFlagsNVXWork(cmdBind)
 
 	addBuildFlagsNVXWork(cmdClean)
-}
-
-func goBuildWithDir(dir, src string, env []string, args ...string) (err error) {
-	var curDir string
-	if curDir, err = os.Getwd(); err != nil {
-		return
-	}
-	defer os.Chdir(curDir)
-
-	if err = os.Chdir(dir); err != nil {
-		return
-	}
-
-	return goBuild(src, env, args...)
 }
 
 func goBuild(src string, env []string, args ...string) error {
@@ -323,6 +309,8 @@ func goCmd(subcmd string, srcs []string, env []string, args ...string) error {
 	cmd.Args = append(cmd.Args, args...)
 	cmd.Args = append(cmd.Args, srcs...)
 	cmd.Env = append([]string{}, env...)
+	// gomobile does not support modules yet.
+	cmd.Env = append(cmd.Env, "GO111MODULE=off")
 	return runCmd(cmd)
 }
 
