@@ -47,7 +47,7 @@ func goAndroidBuildx(pkg *build.Package, androidArchs []string) (map[string]bool
 
 	buildMode := "-buildmode=c-shared"
 	if buildExe {
-		buildMode = "-buildmode=exe"
+		buildMode = "-buildmode=pie"
 	}
 
 	for _, arch := range androidArchs {
