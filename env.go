@@ -83,6 +83,7 @@ func envInit() (err error) {
 	// Setup the cross-compiler environments.
 	if ndkRoot, err := ndkRoot(); err == nil {
 		androidEnv = make(map[string][]string)
+		cgoEnvs := []string{"CGO_CFLAGS", "CGO_CPPFLAGS", "CGO_CXXFLAGS", "CGO_LDFLAGS"}
 		for arch, toolchain := range ndk {
 			clang := toolchain.Path(ndkRoot, "clang")
 			clangpp := toolchain.Path(ndkRoot, "clang++")
@@ -110,6 +111,11 @@ func envInit() (err error) {
 			}
 			if arch == "arm" {
 				androidEnv[arch] = append(androidEnv[arch], "GOARM=7")
+			}
+			for _, envKey := range cgoEnvs {
+				if val := strings.TrimSpace(os.Getenv(envKey)); len(val) > 0 {
+					androidEnv[arch] = append(androidEnv[arch], fmt.Sprintf("%s=%s", envKey, val))
+				}
 			}
 		}
 	}
