@@ -20,6 +20,47 @@ import (
 )
 
 func goIOSBuild(pkg *build.Package, bundleID string, archs []string) (map[string]bool, error) {
+	libName := rfc1034Label(path.Base(pkg.ImportPath))
+	if libName == "" {
+		libName = "ProductName" // like xcode.
+	}
+
+	if buildO == "" {
+		buildO = "build"
+	}
+
+	src := pkg.ImportPath
+	cmd := exec.Command("xcrun", "lipo", "-create")
+
+	for _, arch := range archs {
+		buildPath := filepath.Join(tmpdir, arch, "lib"+libName+".a")
+		// Disable DWARF; see golang.org/issues/25148.
+		if err := goBuild(src,
+			darwinEnv[arch],
+			"-buildmode=c-archive",
+			"-ldflags=-w",
+			"-o="+buildPath); err != nil {
+			return nil, err
+		}
+		cmd.Args = append(cmd.Args, "-arch", archClang(arch), buildPath)
+	}
+
+	outputDir := filepath.Join(buildO, "ios")
+	cmd.Args = append(cmd.Args, "-o", outputDir+"/lib"+libName+".a")
+	if err := removeAll(outputDir); err != nil {
+		return nil, err
+	}
+	if err := mkdir(outputDir); err != nil {
+		return nil, err
+	}
+	if err := runCmd(cmd); err != nil {
+		return nil, err
+	}
+
+	return make(map[string]bool), nil
+}
+
+func goIOSBuild2(pkg *build.Package, bundleID string, archs []string) (map[string]bool, error) {
 	src := pkg.ImportPath
 	if buildO != "" && !strings.HasSuffix(buildO, ".app") {
 		return nil, fmt.Errorf("-o must have an .app for -target=ios")

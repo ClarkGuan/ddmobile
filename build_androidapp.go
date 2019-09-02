@@ -36,6 +36,7 @@ func goAndroidBuildx(pkg *build.Package, androidArchs []string) (map[string]bool
 	if buildO == "" {
 		buildO = "build"
 	}
+	outputDir := filepath.Join(buildO, "android")
 
 	libPathFunc := func(chain ndkToolchain, libName string) string {
 		if buildExe {
@@ -54,7 +55,7 @@ func goAndroidBuildx(pkg *build.Package, androidArchs []string) (map[string]bool
 		env := androidEnv[arch]
 		toolchain := ndk.Toolchain(arch)
 		libPath := libPathFunc(toolchain, libName)
-		libAbsPath := filepath.Join(buildO, libPath)
+		libAbsPath := filepath.Join(outputDir, libPath)
 		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
 			return nil, err
 		}
