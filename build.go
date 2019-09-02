@@ -134,9 +134,9 @@ func runBuild(cmd *command) (err error) {
 			}
 			return nil
 		}
-		if buildBundleID == "" {
-			return fmt.Errorf("-target=ios requires -bundleid set")
-		}
+		//if buildBundleID == "" {
+		//	return fmt.Errorf("-target=ios requires -bundleid set")
+		//}
 		nmpkgs, err = goIOSBuild(pkg, buildBundleID, targetArchs)
 		if err != nil {
 			return err

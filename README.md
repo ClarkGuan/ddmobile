@@ -37,7 +37,7 @@ cd $GOPATH/src/hello_world
 ddmobile build -target android/arm,android/arm64
 ```
 
-如果构建顺利，会在 $GOPATH/src/hello_world 目录中生成 build/ 子目录，并列出 arm 32 位和 64 位的动态库。
+如果构建顺利，会在 $GOPATH/src/hello_world 目录中生成 build/android 子目录，并列出 arm 32 位和 64 位的动态库。
 
 如果我们编译的是可执行文件，则运行
 
@@ -46,7 +46,25 @@ cd $GOPATH/src/hello_world
 ddmobile build -exe
 ```
 
-这时生成的子目录为 build/android/app/。另：我们并没有特殊指明 `-target android/arm,android/arm64`，默认会产出 Android 所有支持的平台产物。
+这时生成的子目录为 build/android/。另：我们并没有特殊指明 `-target android/arm,android/arm64`，默认会产出 Android 所有支持的平台产物。
+
+##### 3、iOS 构建
+
+```bash
+cd $GOPATH/src/hello_world
+ddmobile build -target ios
+```
+
+和 Android 构建类似，因为这里并没有指定使用何种架构编译，所以会生成所有支持的 iOS 架构产物，构建目录是 build/ios 子目录。
+
+当然，我们也可以指定目标架构：
+
+```bash
+cd $GOPATH/src/hello_world
+ddmobile build -target ios/arm,ios/arm64,ios/386,ios/amd64
+```
+
+这个命令和上一个命令是等价的。
 
 #### 举例
 
@@ -81,7 +99,7 @@ ddmobile build -target android/arm -exe
 使用我编写的另一个工具 arun（ https://github.com/ClarkGuan/arun ）：
 
 ```bash
-arun -exe build/android/app/armeabi-v7a/hello
+arun -exe build/android/armeabi-v7a/hello
 ```
 
 输出类似下面（我们假定您已经将 adb 命令加入到 $PATH 中）
