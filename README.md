@@ -12,14 +12,6 @@ go get github.com/ClarkGuan/ddmobile
 
 ##### 1、初始化
 
-和 gomobile 类似，使用前我们运行命令
-
-```bash
-ddmobile init
-```
-
-这一过程本质上是预编译 Go 在 Android 和 iOS 平台上对应的标准库。
-
 我们假设有一个 go 工程在 $GOPATH/src/hello_world 目录下，
 
 Android 环境初始化依赖 NDK 工具，默认情况下会搜索如下环境变量：
