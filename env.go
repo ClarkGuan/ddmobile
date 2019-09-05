@@ -143,7 +143,7 @@ func envInit() (err error) {
 		default:
 			panic(fmt.Errorf("unknown GOARCH: %q", arch))
 		}
-		cflags += " -fembed-bitcode"
+		//cflags += " -fembed-bitcode"
 		if err != nil {
 			return err
 		}

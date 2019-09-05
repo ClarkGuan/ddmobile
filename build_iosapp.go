@@ -19,7 +19,7 @@ import (
 	"text/template"
 )
 
-func goIOSBuild(pkg *build.Package, bundleID string, archs []string) (map[string]bool, error) {
+func goIOSBuild(pkg *build.Package, _ string, archs []string) (map[string]bool, error) {
 	libName := rfc1034Label(path.Base(pkg.ImportPath))
 	if libName == "" {
 		libName = "ProductName" // like xcode.
