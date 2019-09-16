@@ -34,9 +34,9 @@ func goAndroidBuildx(pkg *build.Package, androidArchs []string) (map[string]bool
 	libName := androidPkgName(appName)
 
 	if buildO == "" {
-		buildO = "build"
+		buildO = "build/android"
 	}
-	outputDir := filepath.Join(buildO, "android")
+	outputDir := buildO
 
 	libPathFunc := func(chain ndkToolchain, libName string) string {
 		if buildExe {
