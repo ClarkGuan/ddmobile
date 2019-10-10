@@ -95,23 +95,26 @@ func runInit(cmd *command) error {
 		initOpenAL = "$OPENAL_PATH"
 	} else {
 		toolsDir := filepath.Join("prebuilt", archNDK(), "bin")
-		ndkFinder := func(env string) string {
-			if home := os.Getenv(env); home != "" {
-				path := home
-				if strings.HasPrefix(env, "ANDROID") {
-					path = filepath.Join(home, "ndk-bundle")
-				}
-				if st, err := os.Stat(filepath.Join(path, toolsDir)); err == nil && st.IsDir() {
-					return home
-				}
-			}
-			return ""
-		}
 
-		envs := []string{"ANDROID_HOME", "ANDROID_SDK", "NDK", "NDK_HOME", "NDK_PATH"}
-		for _, env := range envs {
-			if initNDK = ndkFinder(env); initNDK != "" {
-				break
+		if initNDK == "" {
+			ndkFinder := func(env string) string {
+				if home := os.Getenv(env); home != "" {
+					path := home
+					if strings.HasPrefix(env, "ANDROID") {
+						path = filepath.Join(home, "ndk-bundle")
+					}
+					if st, err := os.Stat(filepath.Join(path, toolsDir)); err == nil && st.IsDir() {
+						return home
+					}
+				}
+				return ""
+			}
+
+			envs := []string{"ANDROID_HOME", "ANDROID_SDK", "NDK", "NDK_HOME", "NDK_PATH"}
+			for _, env := range envs {
+				if initNDK = ndkFinder(env); initNDK != "" {
+					break
+				}
 			}
 		}
 
