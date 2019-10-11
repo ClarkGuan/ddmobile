@@ -143,7 +143,7 @@ func runBuild(cmd *command) (err error) {
 		}
 	}
 
-	nmpkgs["golang.org/x/mobile/app"] = true  // 强制通过
+	nmpkgs["golang.org/x/mobile/app"] = true // 强制通过
 	if !nmpkgs["golang.org/x/mobile/app"] {
 		return fmt.Errorf(`%s does not import "golang.org/x/mobile/app"`, pkg.ImportPath)
 	}
@@ -225,6 +225,7 @@ var (
 	buildV          bool   // -v
 	buildX          bool   // -x
 	buildO          string // -o
+	buildP          string // -p
 	buildGcflags    string // -gcflags
 	buildLdflags    string // -ldflags
 	buildTarget     string // -target
@@ -237,6 +238,7 @@ var (
 
 func addBuildFlags(cmd *command) {
 	cmd.flag.StringVar(&buildO, "o", "", "")
+	cmd.flag.StringVar(&buildP, "p", "", "output library file name")
 	cmd.flag.StringVar(&buildGcflags, "gcflags", "", "")
 	cmd.flag.StringVar(&buildLdflags, "ldflags", "", "")
 	cmd.flag.StringVar(&buildTarget, "target", "android", "")

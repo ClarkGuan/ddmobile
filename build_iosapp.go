@@ -24,6 +24,9 @@ func goIOSBuild(pkg *build.Package, _ string, archs []string) (map[string]bool, 
 	if libName == "" {
 		libName = "ProductName" // like xcode.
 	}
+	if buildP != "" {
+		libName = buildP
+	}
 
 	if buildO == "" {
 		buildO = "build"

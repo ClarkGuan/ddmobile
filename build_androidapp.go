@@ -32,6 +32,9 @@ func goAndroidBuildx(pkg *build.Package, androidArchs []string) (map[string]bool
 
 	appName := path.Base(pkg.ImportPath)
 	libName := androidPkgName(appName)
+	if buildP != "" {
+		libName = buildP
+	}
 
 	if buildO == "" {
 		buildO = "build/android"
