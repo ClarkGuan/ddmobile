@@ -103,3 +103,11 @@ prepare to push /Users/xxx/gopath/src/hello/build/android/app/armeabi-v7a/hello 
 Hello world
 [程序执行完毕]
 ```
+
+#### 修改日志
+
+* 2019-09-05 去掉 iOS 生成的目标文件中的 bitcode 段（一是增大了包体积；二是仍然无法满足 Apple 100% bitcode 覆盖的要求）
+* 2019-10-10 创建分支 v1.0。该分支为 2018 年代码，支持 NDKr17 以及更早的版本
+* 2019-10-11 
+    * 添加选项 -p，可以指定 Android 和 iOS 输出库文件的名称。例如 -p hello，对应 Android 动态库 libhello.so；对应 iOS 静态库 libhello.a
+    * 【Android SDK 内 NDK 目录名称又变化了】添加对 $NDK 环境变量的识别，优先使用该环境变了定位 NDK 的位置
