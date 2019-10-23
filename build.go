@@ -304,6 +304,9 @@ func goCmd(subcmd string, srcs []string, env []string, args ...string) error {
 	if buildX {
 		cmd.Args = append(cmd.Args, "-x")
 	}
+	if goVersionMinor >= 13 {
+		cmd.Args = append(cmd.Args, "-trimpath")
+	}
 	if buildGcflags != "" {
 		cmd.Args = append(cmd.Args, "-gcflags", buildGcflags)
 	}

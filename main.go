@@ -27,6 +27,8 @@ var (
 	goVersionOut = []byte(nil)
 )
 
+var goVersionMinor int
+
 func printUsage(w io.Writer) {
 	bufw := bufio.NewWriter(w)
 	if err := usageTmpl.Execute(bufw, commands); err != nil {
@@ -101,6 +103,8 @@ func determineGoVersion() error {
 	if minor < 10 {
 		return errors.New("Go 1.10 or newer is required")
 	}
+
+	goVersionMinor = minor
 	return nil
 }
 
