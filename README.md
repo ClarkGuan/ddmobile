@@ -5,11 +5,42 @@ gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构�
 #### 安装
 
 ```bash
-cd <your-work-space>
-git clone github.com/ClarkGuan/ddmobile
-cd ddmobile
-go get -x -v
-go install -x -v
+$ cd <your-work-space>
+$ git clone github.com/ClarkGuan/ddmobile
+$ cd ddmobile
+$ go get -x -v
+$ go install -x -v
+```
+
+#### 帮助
+
+```bash
+$ ddmobile help
+Ddmobile is a tool for building and running mobile apps written in Go.
+
+To install:
+
+	$ go get github.com/ClarkGuan/ddmobile
+	$ ddmobile init
+
+At least Go 1.10 is required.
+For detailed instructions, see https://golang.org/wiki/Mobile.
+
+Usage:
+
+	ddmobile command [arguments]
+
+Commands:
+
+	bind        build a library for Android and iOS
+	build       compile android APK and iOS app
+	build2      compile android shared library and iOS static library
+	clean       remove object files and cached ddmobile files
+	init        build OpenAL for Android
+	install     compile android APK and install on device
+	version     print version
+
+Use 'ddmobile help [command]' for more information about that command.
 ```
 
 #### 使用
