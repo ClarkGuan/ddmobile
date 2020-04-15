@@ -23,6 +23,7 @@ Commands:
 
 	ddmobile   %!(EXTRA string=bind) build a library for Android and iOS
 	ddmobile   %!(EXTRA string=build) compile android APK and iOS app
+	ddmobile   %!(EXTRA string=build2) compile android shared library and iOS static library
 	ddmobile   %!(EXTRA string=clean) remove object files and cached ddmobile files
 	ddmobile   %!(EXTRA string=init) build OpenAL for Android
 	ddmobile   %!(EXTRA string=install) compile android APK and install on device
@@ -111,6 +112,42 @@ The default and minimum is 15.
 
 The -bundleid flag is required for -target ios and sets the bundle ID to use
 with the app.
+
+The -o flag specifies the output file name. If not specified, the
+output file name depends on the package built.
+
+The -v flag provides verbose output, including the list of packages built.
+
+The build flags -a, -i, -n, -x, -gcflags, -ldflags, -tags, -trimpath, and -work are
+shared with the build command. For documentation, see 'go help build'.
+
+
+Compile android shared library and iOS static library
+
+Usage:
+
+	ddmobile build2 [-target android|ios] [-o output] [build flags] [package]
+
+Build2 compiles and encodes the app named by the import path.
+
+The named package must define a main function.
+
+The -target flag takes a target system name, either android (the
+default) or ios.
+
+For -target android, by default, this builds a fat APK for all supported
+instruction sets (arm, 386, amd64, arm64). A subset of instruction sets can
+be selected by specifying target type with the architecture name. E.g.
+-target=android/arm,android/386.
+
+For -target ios, ddmobile must be run on an OS X machine with Xcode
+installed.
+
+Flag -iosversion sets the minimal version of the iOS SDK to compile against.
+The default version is 7.0.
+
+Flag -androidapi sets the Android API version to compile against.
+The default and minimum is 15.
 
 The -o flag specifies the output file name. If not specified, the
 output file name depends on the package built.

@@ -1,11 +1,15 @@
 # ddmobile
 
-gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构建 module 包的功能，针对 Android 和 iOS 平台修改为构建产出 .so 和 .a 库文件。
+gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构建 module 包这个功能，针对 Android 和 iOS 平台修改为构建产出 .so 和 .a 库文件。
 
 #### 安装
 
 ```bash
-go get github.com/ClarkGuan/ddmobile
+cd <your-work-space>
+git clone github.com/ClarkGuan/ddmobile
+cd ddmobile
+go get -x -v
+go install -x -v
 ```
 
 #### 使用
@@ -19,6 +23,10 @@ Android 环境初始化依赖 NDK 工具，默认情况下会搜索如下环境�
 * ANDROID_HOME
 
 实际上是指定 Android SDK 的位置，如果 SDK 中装有 NDK（ndk-bundle 目录）则使用该版本 NDK。
+
+* ANDROID_NDK_HOME
+
+因为 Android SDK 新版将 NDK 内置路径（ndk-bundle 目录）作出修改，为了便于 ddmobile 查找，可以定义 ANDROID_NDK_HOME 环境变量指向具体位置。
 
 iOS 环境初始化依赖 Xcode 以及相关命令行工具（xcrun 等）。
 

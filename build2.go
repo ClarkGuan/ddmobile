@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -10,7 +13,7 @@ import (
 var cmdBuild2 = &command{
 	run:   runBuild2,
 	Name:  "build2",
-	Usage: "[-target android|ios] [-o output] [-bundleid bundleID] [build flags] [package]",
+	Usage: "[-target android|ios] [-o output] [build flags] [package]",
 	Short: "compile android shared library and iOS static library",
 	Long: fmt.Sprintf(`
 Build2 compiles and encodes the app named by the import path.
@@ -33,9 +36,6 @@ The default version is 7.0.
 
 Flag -androidapi sets the Android API version to compile against.
 The default and minimum is 15.
-
-The -bundleid flag is required for -target ios and sets the bundle ID to use
-with the app.
 
 The -o flag specifies the output file name. If not specified, the
 output file name depends on the package built.
@@ -94,7 +94,6 @@ func runBuildImpl2(cmd *command) (*packages.Package, error) {
 		return nil, fmt.Errorf("cannot set -o when building non-main package")
 	}
 
-	var nmpkgs map[string]bool
 	switch targetOS {
 	case "android":
 		if pkg.Name != "main" {
@@ -105,7 +104,7 @@ func runBuildImpl2(cmd *command) (*packages.Package, error) {
 			}
 			return pkg, nil
 		}
-		nmpkgs, err = goAndroidBuild(pkg, targetArchs)
+		_, err = goAndroidBuild2(pkg, targetArchs)
 		if err != nil {
 			return nil, err
 		}
@@ -121,18 +120,70 @@ func runBuildImpl2(cmd *command) (*packages.Package, error) {
 			}
 			return pkg, nil
 		}
-		if buildBundleID == "" {
-			return nil, fmt.Errorf("-target=ios requires -bundleid set")
-		}
-		nmpkgs, err = goIOSBuild(pkg, buildBundleID, targetArchs)
+		_, err = goIOSBuild2(pkg, buildBundleID, targetArchs)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if !nmpkgs["golang.org/x/mobile/app"] {
-		return nil, fmt.Errorf(`%s does not import "golang.org/x/mobile/app"`, pkg.PkgPath)
+	return pkg, nil
+}
+
+func goAndroidBuild2(pkg *packages.Package, androidArchs []string) (map[string]bool, error) {
+	_, err := ndkRoot()
+	if err != nil {
+		return nil, err
+	}
+	appName := path.Base(pkg.PkgPath)
+	libName := androidPkgName(appName)
+
+	for _, arch := range androidArchs {
+		toolchain := ndk.Toolchain(arch)
+		libPath := "lib/" + toolchain.abi + "/lib" + libName + ".so"
+		libAbsPath := filepath.Join(buildO, "android", libPath)
+		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
+			return nil, err
+		}
+		err = goBuild(
+			pkg.PkgPath,
+			androidEnv[arch],
+			"-buildmode=c-shared",
+			"-o", libAbsPath,
+		)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return pkg, nil
+	return nil, nil
+}
+
+func goIOSBuild2(pkg *packages.Package, bundleID string, archs []string) (map[string]bool, error) {
+	src := pkg.PkgPath
+
+	productName := rfc1034Label(path.Base(pkg.PkgPath))
+	if productName == "" {
+		productName = "ProductName" // like xcode.
+	}
+
+	// We are using lipo tool to build multiarchitecture binaries.
+	cmd := exec.Command(
+		"xcrun", "lipo",
+		"-o", filepath.Join(buildO, "iOS", "lib"+productName+".a"),
+		"-create",
+	)
+	for _, arch := range archs {
+		path := filepath.Join(tmpdir, arch)
+		// Disable DWARF; see golang.org/issues/25148.
+		if err := goBuild(src, darwinEnv[arch], "-ldflags=-w", "-buildmode=c-static", "-o="+path); err != nil {
+			return nil, err
+		}
+		cmd.Args = append(cmd.Args, path)
+	}
+
+	if err := runCmd(cmd); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }

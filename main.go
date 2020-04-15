@@ -165,6 +165,7 @@ var commands = []*command{
 	// TODO(crawshaw): cmdRun
 	cmdBind,
 	cmdBuild,
+	cmdBuild2,
 	cmdClean,
 	cmdInit,
 	cmdInstall,
