@@ -8,8 +8,8 @@ gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构�
 $ cd <your-work-space>
 $ git clone github.com/ClarkGuan/ddmobile
 $ cd ddmobile
-$ go get -x -v
-$ go install -x -v
+$ go get
+$ go install
 ```
 
 #### 帮助
@@ -64,8 +64,8 @@ iOS 环境初始化依赖 Xcode 以及相关命令行工具（xcrun 等）。
 我们假设有一个 go 工程在 <your-work-space> 目录下，
 
 ```bash
-cd <your-work-space>
-ddmobile build2 -target android/arm,android/arm64
+$ cd <your-work-space>
+$ ddmobile build2 -target android/arm,android/arm64
 ```
 
 如果构建顺利，会在 $GOPATH/src/hello_world 目录中生成 build/android/lib 子目录，并列出 arm 32 位和 64 位的动态库。
@@ -73,8 +73,8 @@ ddmobile build2 -target android/arm,android/arm64
 如果我们编译的是可执行文件，则运行
 
 ```bash
-cd <your-work-space>
-ddmobile build2 -exe
+$ cd <your-work-space>
+$ ddmobile build2 -exe
 ```
 
 这时生成的子目录为 build/android/app。另：我们并没有特殊指明 `-target android/arm,android/arm64`，默认会产出 Android 所有支持的平台产物。
@@ -82,8 +82,8 @@ ddmobile build2 -exe
 ##### 3、iOS 构建
 
 ```bash
-cd <your-work-space>
-ddmobile build2 -target ios
+$ cd <your-work-space>
+$ ddmobile build2 -target ios
 ```
 
 和 Android 构建类似，因为这里并没有指定使用何种架构编译，所以会生成所有支持的 iOS 架构产物，构建目录是 build/iOS 子目录。
@@ -91,8 +91,8 @@ ddmobile build2 -target ios
 当然，我们也可以指定目标架构：
 
 ```bash
-cd <your-work-space>
-ddmobile build2 -target ios/arm,ios/arm64,ios/386,ios/amd64
+$ cd <your-work-space>
+$ ddmobile build2 -target ios/arm,ios/arm64,ios/386,ios/amd64
 ```
 
 这个命令和上一个命令是等价的。
@@ -102,9 +102,9 @@ ddmobile build2 -target ios/arm,ios/arm64,ios/386,ios/amd64
 我们以可以在 Android 上运行的 HelloWorld 工程为例，创建目录
 
 ```bash
-mkdir -p <your-work-space>
-cd <your-work-space>
-touch main.go
+$ mkdir -p <your-work-space>
+$ cd <your-work-space>
+$ touch main.go
 ```
 
 main.go 内容如下：
@@ -124,14 +124,15 @@ func main() {
 此时运行命令
 
 ```bash
-go mod init hello
-ddmobile build2 -target android/arm -exe
+$ go mod init hello
+$ ddmobile build2 -target android/arm -exe
 ```
 
 使用我编写的另一个工具 arun（ https://github.com/ClarkGuan/arun ）：
 
 ```bash
-arun -exe build/android/app/armeabi-v7a/hello
+$ GO111MODULE=0 go get -u github.com/ClarkGuan/arun
+$ arun -exe build/android/app/armeabi-v7a/hello
 ```
 
 输出类似下面（我们假定您已经将 adb 命令加入到 $PATH 中）
