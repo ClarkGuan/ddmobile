@@ -15,3 +15,4 @@ android
 ios
 *.iml
 .idea
+go.sum
