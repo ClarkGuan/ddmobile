@@ -186,11 +186,15 @@ func ndkRoot() (string, error) {
 		}
 	}
 
-	ndkRoot := os.Getenv("ANDROID_NDK_HOME")
-	if ndkRoot != "" {
-		_, err := os.Stat(ndkRoot)
-		if err == nil {
-			return ndkRoot, nil
+	ndkPaths := []string{"NDK", "ANDROID_NDK_HOME"}
+	ndkRoot := ""
+	for _, path := range ndkPaths {
+		ndkRoot = os.Getenv(path)
+		if ndkRoot != "" {
+			_, err := os.Stat(ndkRoot)
+			if err == nil {
+				return ndkRoot, nil
+			}
 		}
 	}
 

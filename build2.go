@@ -137,18 +137,32 @@ func goAndroidBuild2(pkg *packages.Package, androidArchs []string) (map[string]b
 	appName := path.Base(pkg.PkgPath)
 	libName := androidPkgName(appName)
 
+	if buildO == "" {
+		buildO = "build"
+	}
+	args := []string(nil)
+	libPath := ""
+
 	for _, arch := range androidArchs {
 		toolchain := ndk.Toolchain(arch)
-		libPath := "lib/" + toolchain.abi + "/lib" + libName + ".so"
+		if buildExe {
+			libPath = "app/" + toolchain.abi + "/" + libName
+		} else {
+			libPath = "lib/" + toolchain.abi + "/lib" + libName + ".so"
+		}
 		libAbsPath := filepath.Join(buildO, "android", libPath)
 		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
 			return nil, err
 		}
+		args = nil
+		if !buildExe {
+			args = append(args, "-buildmode=c-shared")
+		}
+		args = append(args, "-o", libAbsPath)
 		err = goBuild(
 			pkg.PkgPath,
 			androidEnv[arch],
-			"-buildmode=c-shared",
-			"-o", libAbsPath,
+			args...,
 		)
 		if err != nil {
 			return nil, err
@@ -164,6 +178,10 @@ func goIOSBuild2(pkg *packages.Package, bundleID string, archs []string) (map[st
 	productName := rfc1034Label(path.Base(pkg.PkgPath))
 	if productName == "" {
 		productName = "ProductName" // like xcode.
+	}
+
+	if buildO == "" {
+		buildO = "build"
 	}
 
 	// We are using lipo tool to build multiarchitecture binaries.
