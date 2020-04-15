@@ -261,6 +261,9 @@ func init() {
 	addBuildFlags(cmdBuild)
 	addBuildFlagsNVXWork(cmdBuild)
 
+	addBuildFlags(cmdBuild2)
+	addBuildFlagsNVXWork(cmdBuild2)
+
 	addBuildFlags(cmdInstall)
 	addBuildFlagsNVXWork(cmdInstall)
 
