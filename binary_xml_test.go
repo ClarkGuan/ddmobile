@@ -48,7 +48,7 @@ func TestBinaryXML(t *testing.T) {
 	}
 	androidJar := filepath.Join(apiPath, "android.jar")
 
-	tmpdir, err := ioutil.TempDir("", "gomobile-test-")
+	tmpdir, err := ioutil.TempDir("", "ddmobile-test-")
 	if err != nil {
 		t.Fatal(err)
 	}

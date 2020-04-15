@@ -173,7 +173,7 @@ func TestBindIOS(t *testing.T) {
 	}
 }
 
-var bindAndroidTmpl = template.Must(template.New("output").Parse(`GOMOBILE={{.GOPATH}}/pkg/gomobile
+var bindAndroidTmpl = template.Must(template.New("output").Parse(`DDMOBILE={{.GOPATH}}/pkg/ddmobile
 WORK=$WORK
 GOOS=android CGO_ENABLED=1 gobind -lang=go,java -outdir=$WORK{{if .JavaPkg}} -javapkg={{.JavaPkg}}{{end}} golang.org/x/mobile/asset
 mkdir -p $WORK/src
@@ -182,7 +182,7 @@ PWD=$WORK/java javac -d $WORK/javac-output -source 1.7 -target 1.7 -bootclasspat
 jar c -C $WORK/javac-output .
 `))
 
-var bindIOSTmpl = template.Must(template.New("output").Parse(`GOMOBILE={{.GOPATH}}/pkg/gomobile
+var bindIOSTmpl = template.Must(template.New("output").Parse(`DDMOBILE={{.GOPATH}}/pkg/ddmobile
 WORK=$WORK
 GOOS=darwin CGO_ENABLED=1 gobind -lang=go,objc -outdir=$WORK -tags=ios{{if .Prefix}} -prefix={{.Prefix}}{{end}} golang.org/x/mobile/asset
 mkdir -p $WORK/src
@@ -209,10 +209,10 @@ ln -s Versions/Current/Modules Asset.framework/Modules
 
 func TestBindWithGoModules(t *testing.T) {
 	if runtime.GOOS == "android" {
-		t.Skipf("gomobile and gobind are not available on %s", runtime.GOOS)
+		t.Skipf("ddmobile and gobind are not available on %s", runtime.GOOS)
 	}
 
-	dir, err := ioutil.TempDir("", "gomobile-test")
+	dir, err := ioutil.TempDir("", "ddmobile-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func TestBindWithGoModules(t *testing.T) {
 	if out, err := exec.Command("go", "build", "-o="+dir, "golang.org/x/mobile/cmd/gobind").CombinedOutput(); err != nil {
 		t.Fatalf("%v: %s", err, string(out))
 	}
-	if out, err := exec.Command("go", "build", "-o="+dir, "golang.org/x/mobile/cmd/gomobile").CombinedOutput(); err != nil {
+	if out, err := exec.Command("go", "build", "-o="+dir, "github.com/ClarkGuan/ddmobile").CombinedOutput(); err != nil {
 		t.Fatalf("%v: %s", err, string(out))
 	}
 	path := dir
@@ -273,11 +273,11 @@ func TestBindWithGoModules(t *testing.T) {
 			for _, tc := range tests {
 				tc := tc
 				t.Run(tc.Name, func(t *testing.T) {
-					cmd := exec.Command(filepath.Join(dir, "gomobile"), "bind", "-target="+target, "-o="+out, tc.Path)
+					cmd := exec.Command(filepath.Join(dir, "ddmobile"), "bind", "-target="+target, "-o="+out, tc.Path)
 					cmd.Env = append(os.Environ(), "PATH="+path, "GO111MODULE=on")
 					cmd.Dir = tc.Dir
 					if out, err := cmd.CombinedOutput(); err != nil {
-						t.Errorf("gomobile bind failed: %v\n%s", err, string(out))
+						t.Errorf("ddmobile bind failed: %v\n%s", err, string(out))
 					}
 				})
 			}

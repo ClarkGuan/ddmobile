@@ -34,7 +34,7 @@ func runVersion(cmd *command) (err error) {
 			return "", err
 		}
 		bindir := filepath.Dir(bin)
-		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "golang.org/x/mobile/cmd/"+gomobileName)
+		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "github.com/ClarkGuan/"+gomobileName)
 		cmd.Env = append(os.Environ(), "GOBIN="+bindir)
 		out, err := cmd.CombinedOutput()
 		if err != nil {

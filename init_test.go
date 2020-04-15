@@ -35,7 +35,7 @@ func TestInit(t *testing.T) {
 
 	// Test that first GOPATH element is chosen correctly.
 	var err error
-	gopath, err = ioutil.TempDir("", "gomobile-test")
+	gopath, err = ioutil.TempDir("", "ddmobile-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func TestInit(t *testing.T) {
 		os.Setenv("HOMEDRIVE", "C:")
 	}
 
-	emptymod, err := ioutil.TempDir("", "gomobile-test")
+	emptymod, err := ioutil.TempDir("", "ddmobile-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,10 +166,10 @@ func defaultOutputData() (outputData, error) {
 	return data, nil
 }
 
-var initTmpl = template.Must(template.New("output").Parse(`GOMOBILE={{.GOPATH}}/pkg/gomobile
+var initTmpl = template.Must(template.New("output").Parse(`DDMOBILE={{.GOPATH}}/pkg/ddmobile
 rm -r -f "$GOMOBILE"
 mkdir -p $GOMOBILE
-WORK={{.GOPATH}}/pkg/gomobile/work
+WORK={{.GOPATH}}/pkg/ddmobile/work
 go install -x golang.org/x/mobile/cmd/gobind
 cp $OPENAL_PATH/include/AL/al.h $GOMOBILE/include/AL/al.h
 mkdir -p $GOMOBILE/include/AL

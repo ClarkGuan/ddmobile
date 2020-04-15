@@ -93,7 +93,7 @@ func TestIOSBuild(t *testing.T) {
 	}
 }
 
-var iosBuildTmpl = template.Must(infoplistTmpl.New("output").Parse(`GOMOBILE={{.GOPATH}}/pkg/gomobile
+var iosBuildTmpl = template.Must(infoplistTmpl.New("output").Parse(`DDMOBILE={{.GOPATH}}/pkg/ddmobile
 WORK=$WORK{{if .Main}}
 mkdir -p $WORK/main.xcodeproj
 echo "{{.Xproj}}" > $WORK/main.xcodeproj/project.pbxproj

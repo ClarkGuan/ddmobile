@@ -4,7 +4,7 @@
 
 package main
 
-//go:generate gomobile help documentation doc.go
+//go:generate ddmobile help documentation doc.go
 
 import (
 	"bufio"
@@ -24,8 +24,8 @@ import (
 )
 
 var (
-	gomobileName    = "gomobile"
-	gomobileEnvName = "GOMOBILE"
+	gomobileName    = "ddmobile"
+	gomobileEnvName = "DDMOBILE"
 	goVersionOut    = []byte(nil)
 )
 
@@ -154,7 +154,7 @@ func helpDocumentation(path string) {
 		w.WriteString(cmd.Long)
 	}
 
-	w.WriteString("*/\npackage main // import \"golang.org/x/mobile/cmd/" + gomobileName + "\"\n")
+	w.WriteString("*/\npackage main // import \"github.com/ClarkGuan/" + gomobileName + "\"\n")
 
 	if err := ioutil.WriteFile(path, w.Bytes(), 0666); err != nil {
 		log.Fatal(err)
@@ -193,7 +193,7 @@ var usageTmpl = template.Must(template.New("usage").Parse(titleCase(
 
 To install:
 
-	$ go get golang.org/x/mobile/cmd/%s
+	$ go get github.com/ClarkGuan/%s
 	$ %s init
 
 At least Go 1.10 is required.
