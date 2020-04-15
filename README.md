@@ -4,7 +4,7 @@ gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构�
 
 #### 安装
 
-```bash
+```
 $ cd <your-work-space>
 $ git clone github.com/ClarkGuan/ddmobile
 $ cd ddmobile
@@ -14,7 +14,7 @@ $ go install
 
 #### 帮助
 
-```bash
+```
 $ ddmobile help
 Ddmobile is a tool for building and running mobile apps written in Go.
 
@@ -61,9 +61,9 @@ iOS 环境初始化依赖 Xcode 以及相关命令行工具（xcrun 等）。
 
 ##### 2、Android 构建
 
-我们假设有一个 go 工程在 <your-work-space> 目录下，
+我们假设有一个 go 工程在 `<your-work-space>` 目录下，
 
-```bash
+```
 $ cd <your-work-space>
 $ ddmobile build2 -target android/arm,android/arm64
 ```
@@ -72,7 +72,7 @@ $ ddmobile build2 -target android/arm,android/arm64
 
 如果我们编译的是可执行文件，则运行
 
-```bash
+```
 $ cd <your-work-space>
 $ ddmobile build2 -exe
 ```
@@ -81,7 +81,7 @@ $ ddmobile build2 -exe
 
 ##### 3、iOS 构建
 
-```bash
+```
 $ cd <your-work-space>
 $ ddmobile build2 -target ios
 ```
@@ -90,7 +90,7 @@ $ ddmobile build2 -target ios
 
 当然，我们也可以指定目标架构：
 
-```bash
+```
 $ cd <your-work-space>
 $ ddmobile build2 -target ios/arm,ios/arm64,ios/386,ios/amd64
 ```
@@ -101,7 +101,7 @@ $ ddmobile build2 -target ios/arm,ios/arm64,ios/386,ios/amd64
 
 我们以可以在 Android 上运行的 HelloWorld 工程为例，创建目录
 
-```bash
+```
 $ mkdir -p <your-work-space>
 $ cd <your-work-space>
 $ touch main.go
@@ -123,14 +123,14 @@ func main() {
 
 此时运行命令
 
-```bash
+```
 $ go mod init hello
 $ ddmobile build2 -target android/arm -exe
 ```
 
 使用我编写的另一个工具 arun（ https://github.com/ClarkGuan/arun ）：
 
-```bash
+```
 $ GO111MODULE=0 go get -u github.com/ClarkGuan/arun
 $ arun -exe build/android/app/armeabi-v7a/hello
 ```
