@@ -5,25 +5,26 @@
 package main
 
 import (
-	"errors"
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
-)
+	"strings"
 
-// ctx, pkg, tmpdir in build.go
+	"golang.org/x/mod/modfile"
+	"golang.org/x/tools/go/packages"
+)
 
 var cmdBind = &command{
 	run:   runBind,
 	Name:  "bind",
 	Usage: "[-target android|ios] [-bootclasspath <path>] [-classpath <path>] [-o output] [build flags] [package]",
 	Short: "build a library for Android and iOS",
-	Long: `
+	Long: fmt.Sprintf(`
 Bind generates language bindings for the package named by the import
 path, and compiles a library for the named target system.
 
@@ -50,7 +51,7 @@ instruction sets (arm, arm64, 386, amd64). A subset of instruction sets
 can be selected by specifying target type with the architecture name. E.g.,
 -target=android/arm,android/386.
 
-For -target ios, gomobile must be run on an OS X machine with Xcode
+For -target ios, %s must be run on an OS X machine with Xcode
 installed. The generated Objective-C types can be prefixed with the -prefix
 flag.
 
@@ -60,9 +61,9 @@ classes.
 
 The -v flag provides verbose output, including the list of packages built.
 
-The build flags -a, -n, -x, -gcflags, -ldflags, -tags, and -work
+The build flags -a, -n, -x, -gcflags, -ldflags, -tags, -trimpath, and -work
 are shared with the build command. For documentation, see 'go help build'.
-`,
+`, gomobileName),
 }
 
 func runBind(cmd *command) error {
@@ -79,48 +80,34 @@ func runBind(cmd *command) error {
 		return fmt.Errorf(`invalid -target=%q: %v`, buildTarget, err)
 	}
 
-	oldCtx := ctx
-	defer func() {
-		ctx = oldCtx
-	}()
-	ctx.GOARCH = "arm"
-	ctx.GOOS = targetOS
-
-	if bindJavaPkg != "" && ctx.GOOS != "android" {
+	if bindJavaPkg != "" && targetOS != "android" {
 		return fmt.Errorf("-javapkg is supported only for android target")
 	}
-	if bindPrefix != "" && ctx.GOOS != "darwin" {
+	if bindPrefix != "" && targetOS != "darwin" {
 		return fmt.Errorf("-prefix is supported only for ios target")
 	}
 
-	if ctx.GOOS == "android" {
+	if targetOS == "android" {
 		if _, err := ndkRoot(); err != nil {
 			return err
 		}
-	}
-
-	if ctx.GOOS == "darwin" {
-		ctx.BuildTags = append(ctx.BuildTags, "ios")
 	}
 
 	var gobind string
 	if !buildN {
 		gobind, err = exec.LookPath("gobind")
 		if err != nil {
-			return errors.New("gobind was not found. Please run gomobile init before trying again.")
+			//return errors.New("gobind was not found. Please run gomobile init before trying again.")
+			return fmt.Errorf("gobind was not found. Please run %s init before trying again.", gomobileName)
 		}
 	} else {
 		gobind = "gobind"
 	}
 
-	var pkgs []*build.Package
-	switch len(args) {
-	case 0:
-		pkgs = make([]*build.Package, 1)
-		pkgs[0], err = ctx.ImportDir(cwd, build.ImportComment)
-	default:
-		pkgs, err = importPackages(args)
+	if len(args) == 0 {
+		args = append(args, ".")
 	}
+	pkgs, err := importPackages(args, targetOS)
 	if err != nil {
 		return err
 	}
@@ -128,7 +115,7 @@ func runBind(cmd *command) error {
 	// check if any of the package is main
 	for _, pkg := range pkgs {
 		if pkg.Name == "main" {
-			return fmt.Errorf("binding 'main' package (%s) is not supported", pkg.ImportComment)
+			return fmt.Errorf("binding 'main' package (%s) is not supported", pkg.PkgPath)
 		}
 	}
 
@@ -145,16 +132,9 @@ func runBind(cmd *command) error {
 	}
 }
 
-func importPackages(args []string) ([]*build.Package, error) {
-	pkgs := make([]*build.Package, len(args))
-	for i, a := range args {
-		a = path.Clean(a)
-		var err error
-		if pkgs[i], err = ctx.Import(a, cwd, build.ImportComment); err != nil {
-			return nil, fmt.Errorf("package %q: %v", a, err)
-		}
-	}
-	return pkgs, nil
+func importPackages(args []string, targetOS string) ([]*packages.Package, error) {
+	config := packagesConfig(targetOS)
+	return packages.Load(config, args...)
 }
 
 var (
@@ -211,8 +191,7 @@ func writeFile(filename string, generate func(io.Writer) error) error {
 		fmt.Fprintf(os.Stderr, "write %s\n", filename)
 	}
 
-	err := mkdir(filepath.Dir(filename))
-	if err != nil {
+	if err := mkdir(filepath.Dir(filename)); err != nil {
 		return err
 	}
 
@@ -231,4 +210,120 @@ func writeFile(filename string, generate func(io.Writer) error) error {
 	}()
 
 	return generate(f)
+}
+
+func packagesConfig(targetOS string) *packages.Config {
+	config := &packages.Config{}
+	// Add CGO_ENABLED=1 explicitly since Cgo is disabled when GOOS is different from host OS.
+	config.Env = append(os.Environ(), "GOARCH=arm", "GOOS="+targetOS, "CGO_ENABLED=1")
+	tags := buildTags
+	if targetOS == "darwin" {
+		tags = append(tags, "ios")
+	}
+	if len(tags) > 0 {
+		config.BuildFlags = []string{"-tags=" + strings.Join(tags, ",")}
+	}
+	return config
+}
+
+// getModuleVersions returns a module information at the directory src.
+func getModuleVersions(targetOS string, targetArch string, src string) (*modfile.File, error) {
+	cmd := exec.Command("go", "list")
+	cmd.Env = append(os.Environ(), "GOOS="+targetOS, "GOARCH="+targetArch)
+
+	tags := buildTags
+	if targetOS == "darwin" {
+		tags = append(tags, "ios")
+	}
+	// TODO(hyangah): probably we don't need to add all the dependencies.
+	cmd.Args = append(cmd.Args, "-m", "-json", "-tags="+strings.Join(tags, ","), "all")
+	cmd.Dir = src
+
+	output, err := cmd.Output()
+	if err != nil {
+		// Module information is not available at src.
+		return nil, nil
+	}
+
+	type Module struct {
+		Main    bool
+		Path    string
+		Version string
+		Dir     string
+		Replace *Module
+	}
+
+	f := &modfile.File{}
+	f.AddModuleStmt("gobind")
+	e := json.NewDecoder(bytes.NewReader(output))
+	for {
+		var mod *Module
+		err := e.Decode(&mod)
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+		if mod != nil {
+			if mod.Replace != nil {
+				p, v := mod.Replace.Path, mod.Replace.Version
+				if modfile.IsDirectoryPath(p) {
+					// replaced by a local directory
+					p = mod.Replace.Dir
+				}
+				f.AddReplace(mod.Path, mod.Version, p, v)
+			} else {
+				// When the version part is empty, the module is local and mod.Dir represents the location.
+				if v := mod.Version; v == "" {
+					f.AddReplace(mod.Path, mod.Version, mod.Dir, "")
+				} else {
+					f.AddRequire(mod.Path, v)
+				}
+			}
+		}
+		if err == io.EOF {
+			break
+		}
+	}
+	return f, nil
+}
+
+// writeGoMod writes go.mod file at $WORK/src when Go modules are used.
+func writeGoMod(targetOS string, targetArch string) error {
+	m, err := areGoModulesUsed()
+	if err != nil {
+		return err
+	}
+	// If Go modules are not used, go.mod should not be created because the dependencies might not be compatible with Go modules.
+	if !m {
+		return nil
+	}
+
+	return writeFile(filepath.Join(tmpdir, "src", "go.mod"), func(w io.Writer) error {
+		f, err := getModuleVersions(targetOS, targetArch, ".")
+		if err != nil {
+			return err
+		}
+		if f == nil {
+			return nil
+		}
+		bs, err := f.Format()
+		if err != nil {
+			return err
+		}
+		if _, err := w.Write(bs); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func areGoModulesUsed() (bool, error) {
+	out, err := exec.Command("go", "env", "GOMOD").Output()
+	if err != nil {
+		return false, err
+	}
+	outstr := strings.TrimSpace(string(out))
+	if outstr == "" {
+		return false, nil
+	}
+	return true, nil
 }

@@ -12,7 +12,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"log"
@@ -22,68 +21,22 @@ import (
 	"strings"
 
 	"github.com/ClarkGuan/ddmobile/internal/binres"
+	"golang.org/x/tools/go/packages"
 )
 
-func goAndroidBuildx(pkg *build.Package, androidArchs []string) (map[string]bool, error) {
-	_, err := ndkRoot()
-	if err != nil {
-		return nil, err
-	}
-
-	appName := path.Base(pkg.ImportPath)
-	libName := androidPkgName(appName)
-	if buildP != "" {
-		libName = buildP
-	}
-
-	if buildO == "" {
-		buildO = "build/android"
-	}
-	outputDir := buildO
-
-	libPathFunc := func(chain ndkToolchain, libName string) string {
-		if buildExe {
-			return chain.abi + "/" + libName
-		} else {
-			return chain.abi + "/lib" + libName + ".so"
-		}
-	}
-
-	buildMode := "-buildmode=c-shared"
-	if buildExe {
-		buildMode = "-buildmode=pie"
-	}
-
-	for _, arch := range androidArchs {
-		env := androidEnv[arch]
-		toolchain := ndk.Toolchain(arch)
-		libPath := libPathFunc(toolchain, libName)
-		libAbsPath := filepath.Join(outputDir, libPath)
-		if err := mkdir(filepath.Dir(libAbsPath)); err != nil {
-			return nil, err
-		}
-		err = goBuild(
-			pkg.ImportPath,
-			env,
-			buildMode,
-			"-o", libAbsPath,
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return make(map[string]bool), nil
-}
-
-func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool, error) {
+func goAndroidBuild(pkg *packages.Package, androidArchs []string) (map[string]bool, error) {
 	ndkRoot, err := ndkRoot()
 	if err != nil {
 		return nil, err
 	}
-	appName := path.Base(pkg.ImportPath)
+	appName := path.Base(pkg.PkgPath)
 	libName := androidPkgName(appName)
-	manifestPath := filepath.Join(pkg.Dir, "AndroidManifest.xml")
+
+	// TODO(hajimehoshi): This works only with Go tools that assume all source files are in one directory.
+	// Fix this to work with other Go tools.
+	dir := filepath.Dir(pkg.GoFiles[0])
+
+	manifestPath := filepath.Join(dir, "AndroidManifest.xml")
 	manifestData, err := ioutil.ReadFile(manifestPath)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -116,7 +69,6 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	nmpkgs := make(map[string]map[string]bool) // map: arch -> extractPkgs' output
 
 	for _, arch := range androidArchs {
-		env := androidEnv[arch]
 		toolchain := ndk.Toolchain(arch)
 		libPath := "lib/" + toolchain.abi + "/lib" + libName + ".so"
 		libAbsPath := filepath.Join(tmpdir, libPath)
@@ -124,8 +76,8 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 			return nil, err
 		}
 		err = goBuild(
-			pkg.ImportPath,
-			env,
+			pkg.PkgPath,
+			androidEnv[arch],
 			"-buildmode=c-shared",
 			"-o", libAbsPath,
 		)
@@ -149,7 +101,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	}
 
 	if buildO == "" {
-		buildO = androidPkgName(filepath.Base(pkg.Dir)) + ".apk"
+		buildO = androidPkgName(path.Base(pkg.PkgPath)) + ".apk"
 	}
 	if !strings.HasSuffix(buildO, ".apk") {
 		return nil, fmt.Errorf("output file name %q does not end in '.apk'", buildO)
@@ -223,7 +175,8 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 			dst := "lib/" + toolchain.abi + "/libopenal.so"
 			src := filepath.Join(gomobilepath, dst)
 			if _, err := os.Stat(src); err != nil {
-				return nil, errors.New("the Android requires the golang.org/x/mobile/exp/audio/al, but the OpenAL libraries was not found. Please run gomobile init with the -openal flag pointing to an OpenAL source directory.")
+				//return nil, errors.New("the Android requires the golang.org/x/mobile/exp/audio/al, but the OpenAL libraries was not found. Please run gomobile init with the -openal flag pointing to an OpenAL source directory.")
+				return nil, fmt.Errorf("the Android requires the golang.org/x/mobile/exp/audio/al, but the OpenAL libraries was not found. Please run %s init with the -openal flag pointing to an OpenAL source directory.", gomobileName)
 			}
 			if err := apkwWriteFile(dst, src); err != nil {
 				return nil, err
@@ -235,7 +188,7 @@ func goAndroidBuild(pkg *build.Package, androidArchs []string) (map[string]bool,
 	var arsc struct {
 		iconPath string
 	}
-	assetsDir := filepath.Join(pkg.Dir, "assets")
+	assetsDir := filepath.Join(dir, "assets")
 	assetsDirExists := true
 	fi, err := os.Stat(assetsDir)
 	if err != nil {

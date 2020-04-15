@@ -28,11 +28,11 @@ var cmdInit = &command{
 	Name:  "init",
 	Usage: "[-openal dir]",
 	Short: "build OpenAL for Android",
-	Long: `
+	Long: fmt.Sprintf(`
 If a OpenAL source directory is specified with -openal, init will
-build an Android version of OpenAL for use with gomobile build
-and gomobile install.
-`,
+build an Android version of OpenAL for use with %s build
+and %s install.
+`, gomobileName, gomobileName),
 }
 
 var initOpenAL string // -openal
@@ -46,10 +46,10 @@ func runInit(cmd *command) error {
 	if len(gopaths) == 0 {
 		return fmt.Errorf("GOPATH is not set")
 	}
-	gomobilepath = filepath.Join(gopaths[0], "pkg/gomobile")
+	gomobilepath = filepath.Join(gopaths[0], "pkg/"+gomobileName)
 
 	if buildX || buildN {
-		fmt.Fprintln(xout, "GOMOBILE="+gomobilepath)
+		fmt.Fprintln(xout, gomobileEnvName+"="+gomobilepath)
 	}
 	removeAll(gomobilepath)
 
@@ -182,7 +182,7 @@ func installOpenAL(gomobilepath string) error {
 		cmd := exec.Command(cmake,
 			initOpenAL,
 			"-DCMAKE_TOOLCHAIN_FILE="+initOpenAL+"/XCompile-Android.txt",
-			"-DHOST="+t.clangPrefix)
+			"-DHOST="+t.ClangPrefix())
 		cmd.Dir = buildDir
 		tcPath := filepath.Join(ndkRoot, "toolchains", "llvm", "prebuilt", archNDK(), "bin")
 		if !buildN {

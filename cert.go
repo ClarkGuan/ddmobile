@@ -23,7 +23,7 @@ import (
 // to our custom data type and then write it back out with the signature.
 func signPKCS7(rand io.Reader, priv *rsa.PrivateKey, msg []byte) ([]byte, error) {
 	const serialNumber = 0x5462c4dd // arbitrary
-	name := pkix.Name{CommonName: "gomobile"}
+	name := pkix.Name{CommonName: gomobileName}
 
 	template := &x509.Certificate{
 		SerialNumber:       big.NewInt(serialNumber),

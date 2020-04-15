@@ -7,7 +7,6 @@ package main
 import (
 	"archive/zip"
 	"fmt"
-	"go/build"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,9 +14,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"golang.org/x/tools/go/packages"
 )
 
-func goAndroidBind(gobind string, pkgs []*build.Package, androidArchs []string) error {
+func goAndroidBind(gobind string, pkgs []*packages.Package, androidArchs []string) error {
 	if sdkDir := os.Getenv("ANDROID_HOME"); sdkDir == "" {
 		return fmt.Errorf("this command requires ANDROID_HOME environment variable (path to the Android SDK)")
 	}
@@ -30,8 +31,8 @@ func goAndroidBind(gobind string, pkgs []*build.Package, androidArchs []string) 
 	)
 	cmd.Env = append(cmd.Env, "GOOS=android")
 	cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
-	if len(ctx.BuildTags) > 0 {
-		cmd.Args = append(cmd.Args, "-tags="+strings.Join(ctx.BuildTags, ","))
+	if len(buildTags) > 0 {
+		cmd.Args = append(cmd.Args, "-tags="+strings.Join(buildTags, ","))
 	}
 	if bindJavaPkg != "" {
 		cmd.Args = append(cmd.Args, "-javapkg="+bindJavaPkg)
@@ -43,7 +44,7 @@ func goAndroidBind(gobind string, pkgs []*build.Package, androidArchs []string) 
 		cmd.Args = append(cmd.Args, "-bootclasspath="+bindBootClasspath)
 	}
 	for _, p := range pkgs {
-		cmd.Args = append(cmd.Args, p.ImportPath)
+		cmd.Args = append(cmd.Args, p.PkgPath)
 	}
 	if err := runCmd(cmd); err != nil {
 		return err
@@ -53,14 +54,19 @@ func goAndroidBind(gobind string, pkgs []*build.Package, androidArchs []string) 
 
 	// Generate binding code and java source code only when processing the first package.
 	for _, arch := range androidArchs {
+		if err := writeGoMod("android", arch); err != nil {
+			return err
+		}
+
 		env := androidEnv[arch]
-		// Add the generated packages to GOPATH
+		// Add the generated packages to GOPATH for reverse bindings.
 		gopath := fmt.Sprintf("GOPATH=%s%c%s", tmpdir, filepath.ListSeparator, goEnv("GOPATH"))
 		env = append(env, gopath)
 		toolchain := ndk.Toolchain(arch)
 
-		err := goBuild(
-			"gobind",
+		err := goBuildAt(
+			filepath.Join(tmpdir, "src"),
+			"./gobind",
 			env,
 			"-buildmode=c-shared",
 			"-o="+filepath.Join(androidDir, "src/main/jniLibs/"+toolchain.abi+"/libgojni.so"),
@@ -114,7 +120,7 @@ func buildSrcJar(src string) error {
 //	aidl (optional, not relevant)
 //
 // javac and jar commands are needed to build classes.jar.
-func buildAAR(srcDir, androidDir string, pkgs []*build.Package, androidArchs []string) (err error) {
+func buildAAR(srcDir, androidDir string, pkgs []*packages.Package, androidArchs []string) (err error) {
 	var out io.Writer = ioutil.Discard
 	if buildO == "" {
 		buildO = pkgs[0].Name + ".aar"
@@ -148,7 +154,7 @@ func buildAAR(srcDir, androidDir string, pkgs []*build.Package, androidArchs []s
 	}
 	const manifestFmt = `<manifest xmlns:android="http://schemas.android.com/apk/res/android" package=%q>
 <uses-sdk android:minSdkVersion="%d"/></manifest>`
-	fmt.Fprintf(w, manifestFmt, "go."+pkgs[0].Name+".gojni", minAndroidAPI)
+	fmt.Fprintf(w, manifestFmt, "go."+pkgs[0].Name+".gojni", buildAndroidAPI)
 
 	w, err = aarwcreate("proguard.txt")
 	if err != nil {
@@ -173,7 +179,9 @@ func buildAAR(srcDir, androidDir string, pkgs []*build.Package, androidArchs []s
 
 	files := map[string]string{}
 	for _, pkg := range pkgs {
-		assetsDir := filepath.Join(pkg.Dir, "assets")
+		// TODO(hajimehoshi): This works only with Go tools that assume all source files are in one directory.
+		// Fix this to work with other Go tools.
+		assetsDir := filepath.Join(filepath.Dir(pkg.GoFiles[0]), "assets")
 		assetsDirExists := false
 		if fi, err := os.Stat(assetsDir); err == nil {
 			assetsDirExists = fi.IsDir()
@@ -198,9 +206,9 @@ func buildAAR(srcDir, androidDir string, pkgs []*build.Package, androidArchs []s
 					name := "assets/" + path[len(assetsDir)+1:]
 					if orig, exists := files[name]; exists {
 						return fmt.Errorf("package %s asset name conflict: %s already added from package %s",
-							pkg.ImportPath, name, orig)
+							pkg.PkgPath, name, orig)
 					}
-					files[name] = pkg.ImportPath
+					files[name] = pkg.PkgPath
 					w, err := aarwcreate(name)
 					if err != nil {
 						return nil
@@ -365,7 +373,7 @@ func androidAPIPath() (string, error) {
 	defer sdkDir.Close()
 	fis, err := sdkDir.Readdir(-1)
 	if err != nil {
-		return "", fmt.Errorf("failed to find android SDK platform (min API level: %d): %v", minAndroidAPI, err)
+		return "", fmt.Errorf("failed to find android SDK platform (API level: %d): %v", buildAndroidAPI, err)
 	}
 
 	var apiPath string
@@ -376,7 +384,7 @@ func androidAPIPath() (string, error) {
 			continue
 		}
 		n, err := strconv.Atoi(name[len("android-"):])
-		if err != nil || n < minAndroidAPI {
+		if err != nil || n < buildAndroidAPI {
 			continue
 		}
 		p := filepath.Join(sdkDir.Name(), name)
@@ -387,8 +395,8 @@ func androidAPIPath() (string, error) {
 		}
 	}
 	if apiVer == 0 {
-		return "", fmt.Errorf("failed to find android SDK platform (min API level: %d) in %s",
-			minAndroidAPI, sdkDir.Name())
+		return "", fmt.Errorf("failed to find android SDK platform (API level: %d) in %s",
+			buildAndroidAPI, sdkDir.Name())
 	}
 	return apiPath, nil
 }

@@ -9,7 +9,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"go/build"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -17,68 +16,33 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"golang.org/x/tools/go/packages"
 )
 
-func goIOSBuild(pkg *build.Package, _ string, archs []string) (map[string]bool, error) {
-	libName := rfc1034Label(path.Base(pkg.ImportPath))
-	if libName == "" {
-		libName = "ProductName" // like xcode.
-	}
-	if buildP != "" {
-		libName = buildP
-	}
-
-	if buildO == "" {
-		buildO = "build"
-	}
-
-	src := pkg.ImportPath
-	cmd := exec.Command("xcrun", "lipo", "-create")
-
-	for _, arch := range archs {
-		buildPath := filepath.Join(tmpdir, arch, "lib"+libName+".a")
-		// Disable DWARF; see golang.org/issues/25148.
-		if err := goBuild(src,
-			darwinEnv[arch],
-			"-buildmode=c-archive",
-			"-ldflags=-w",
-			"-o="+buildPath); err != nil {
-			return nil, err
-		}
-		cmd.Args = append(cmd.Args, "-arch", archClang(arch), buildPath)
-	}
-
-	outputDir := filepath.Join(buildO, "ios")
-	cmd.Args = append(cmd.Args, "-o", outputDir+"/lib"+libName+".a")
-	if err := removeAll(outputDir); err != nil {
-		return nil, err
-	}
-	if err := mkdir(outputDir); err != nil {
-		return nil, err
-	}
-	if err := runCmd(cmd); err != nil {
-		return nil, err
-	}
-
-	return make(map[string]bool), nil
-}
-
-func goIOSBuild2(pkg *build.Package, bundleID string, archs []string) (map[string]bool, error) {
-	src := pkg.ImportPath
+func goIOSBuild(pkg *packages.Package, bundleID string, archs []string) (map[string]bool, error) {
+	src := pkg.PkgPath
 	if buildO != "" && !strings.HasSuffix(buildO, ".app") {
 		return nil, fmt.Errorf("-o must have an .app for -target=ios")
 	}
 
-	productName := rfc1034Label(path.Base(pkg.ImportPath))
+	productName := rfc1034Label(path.Base(pkg.PkgPath))
 	if productName == "" {
 		productName = "ProductName" // like xcode.
+	}
+
+	projPbxproj := new(bytes.Buffer)
+	if err := projPbxprojTmpl.Execute(projPbxproj, projPbxprojTmplData{
+		BitcodeEnabled: bitcodeEnabled,
+	}); err != nil {
+		return nil, err
 	}
 
 	infoplist := new(bytes.Buffer)
 	if err := infoplistTmpl.Execute(infoplist, infoplistTmplData{
 		// TODO: better bundle id.
 		BundleID: bundleID + "." + productName,
-		Name:     strings.Title(path.Base(pkg.ImportPath)),
+		Name:     strings.Title(path.Base(pkg.PkgPath)),
 	}); err != nil {
 		return nil, err
 	}
@@ -87,7 +51,7 @@ func goIOSBuild2(pkg *build.Package, bundleID string, archs []string) (map[strin
 		name     string
 		contents []byte
 	}{
-		{tmpdir + "/main.xcodeproj/project.pbxproj", []byte(projPbxproj)},
+		{tmpdir + "/main.xcodeproj/project.pbxproj", projPbxproj.Bytes()},
 		{tmpdir + "/main/Info.plist", infoplist.Bytes()},
 		{tmpdir + "/main/Images.xcassets/AppIcon.appiconset/Contents.json", []byte(contentsJSON)},
 	}
@@ -160,7 +124,7 @@ func goIOSBuild2(pkg *build.Package, bundleID string, archs []string) (map[strin
 
 	// TODO(jbd): Fallback to copying if renaming fails.
 	if buildO == "" {
-		n := pkg.ImportPath
+		n := pkg.PkgPath
 		if n == "." {
 			// use cwd name
 			cwd, err := os.Getwd()
@@ -220,13 +184,15 @@ func detectTeamID() (string, error) {
 	return cert.Subject.OrganizationalUnit[0], nil
 }
 
-func iosCopyAssets(pkg *build.Package, xcodeProjDir string) error {
+func iosCopyAssets(pkg *packages.Package, xcodeProjDir string) error {
 	dstAssets := xcodeProjDir + "/main/assets"
 	if err := mkdir(dstAssets); err != nil {
 		return err
 	}
 
-	srcAssets := filepath.Join(pkg.Dir, "assets")
+	// TODO(hajimehoshi): This works only with Go tools that assume all source files are in one directory.
+	// Fix this to work with other Go tools.
+	srcAssets := filepath.Join(filepath.Dir(pkg.GoFiles[0]), "assets")
 	fi, err := os.Stat(srcAssets)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -312,7 +278,11 @@ var infoplistTmpl = template.Must(template.New("infoplist").Parse(`<?xml version
 </plist>
 `))
 
-const projPbxproj = `// !$*UTF8*$!
+type projPbxprojTmplData struct {
+	BitcodeEnabled bool
+}
+
+var projPbxprojTmpl = template.Must(template.New("projPbxproj").Parse(`// !$*UTF8*$!
 {
   archiveVersion = 1;
   classes = {
@@ -470,6 +440,7 @@ const projPbxproj = `// !$*UTF8*$!
         SDKROOT = iphoneos;
         TARGETED_DEVICE_FAMILY = "1,2";
         VALIDATE_PRODUCT = YES;
+        {{if not .BitcodeEnabled}}ENABLE_BITCODE = NO;{{end}}
       };
       name = Release;
     };
@@ -506,7 +477,7 @@ const projPbxproj = `// !$*UTF8*$!
   };
   rootObject = 254BB8361B1FD08900C56DE9 /* Project object */;
 }
-`
+`))
 
 const contentsJSON = `{
   "images" : [

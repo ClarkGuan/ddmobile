@@ -18,9 +18,9 @@ var cmdVersion = &command{
 	Name:  "version",
 	Usage: "",
 	Short: "print version",
-	Long: `
-Version prints versions of the gomobile binary and tools
-`,
+	Long: fmt.Sprintf(`
+Version prints versions of the %s binary and tools
+`, gomobileName),
 }
 
 func runVersion(cmd *command) (err error) {
@@ -34,11 +34,11 @@ func runVersion(cmd *command) (err error) {
 			return "", err
 		}
 		bindir := filepath.Dir(bin)
-		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "golang.org/x/mobile/cmd/gomobile")
+		cmd := exec.Command("go", "list", "-f", "{{.Stale}}", "golang.org/x/mobile/cmd/"+gomobileName)
 		cmd.Env = append(os.Environ(), "GOBIN="+bindir)
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return "", fmt.Errorf("cannot test gomobile binary: %v, %s", err, out)
+			return "", fmt.Errorf("cannot test %s binary: %v, %s", gomobileName, err, out)
 		}
 		if strings.TrimSpace(string(out)) != "false" {
 			return "", fmt.Errorf("binary is out of date, re-install it")
@@ -46,7 +46,7 @@ func runVersion(cmd *command) (err error) {
 		return mobileRepoRevision()
 	}()
 	if err != nil {
-		fmt.Printf("gomobile version unknown: %v\n", err)
+		fmt.Printf(gomobileName+" version unknown: %v\n", err)
 		return nil
 	}
 
@@ -59,7 +59,7 @@ func runVersion(cmd *command) (err error) {
 	// ANDROID_HOME, sdk build tool version
 	androidapi, _ := androidAPIPath()
 
-	fmt.Printf("gomobile version %s (%s); androidSDK=%s\n", version, platforms, androidapi)
+	fmt.Printf(gomobileName+" version %s (%s); androidSDK=%s\n", version, platforms, androidapi)
 	return nil
 }
 
