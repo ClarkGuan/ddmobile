@@ -111,3 +111,4 @@ Hello world
 * 2019-10-11 
     * 添加选项 -p，可以指定 Android 和 iOS 输出库文件的名称。例如 -p hello，对应 Android 动态库 libhello.so；对应 iOS 静态库 libhello.a
     * 【Android SDK 内 NDK 目录名称又变化了】添加对 $NDK 环境变量的识别，优先使用该环境变了定位 NDK 的位置
+* 2020-04-15 创建分支 v1.1。该分支为 2019 年代码，支持 NDKr17～NDKr20 或更高的版本（最高支持版本未知）
