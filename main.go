@@ -186,7 +186,7 @@ func (cmd *command) usage() {
 }
 
 func titleCase(s string) string {
-	return fmt.Sprintf(s, strings.Title(gomobileName), gomobileName, gomobileName, gomobileName, gomobileName)
+	return fmt.Sprintf(s, strings.Title(gomobileName), gomobileName, gomobileName, gomobileName, "{{.Name | printf \"%-11s\"}} {{.Short}}{{end}}", gomobileName)
 }
 
 var usageTmpl = template.Must(template.New("usage").Parse(titleCase(
@@ -206,7 +206,7 @@ Usage:
 
 Commands:
 {{range .}}
-	{{.Name | printf "%-11s"}} {{.Short}}{{end}}
+	%s
 
 Use '%s help [command]' for more information about that command.
 `)))

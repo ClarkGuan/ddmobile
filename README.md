@@ -1,6 +1,6 @@
 # ddmobile
 
-gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构建 module 包这个功能，针对 Android 和 iOS 平台修改为构建产出 .so 和 .a 库文件。
+gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构建 module 包这个功能，针对 Android 和 iOS 平台修改为构建产出 .so 和 .a 库文件。（Android 平台还支持直接生成可执行文件）
 
 #### 安装
 
@@ -16,8 +16,6 @@ go install -x -v
 
 ##### 1、初始化
 
-我们假设有一个 go 工程在 $GOPATH/src/hello_world 目录下，
-
 Android 环境初始化依赖 NDK 工具，默认情况下会搜索如下环境变量：
 
 * ANDROID_HOME
@@ -31,6 +29,8 @@ Android 环境初始化依赖 NDK 工具，默认情况下会搜索如下环境�
 iOS 环境初始化依赖 Xcode 以及相关命令行工具（xcrun 等）。
 
 ##### 2、Android 构建
+
+我们假设有一个 go 工程在 <your-work-space> 目录下，
 
 ```bash
 cd <your-work-space>
@@ -100,7 +100,7 @@ ddmobile build2 -target android/arm -exe
 使用我编写的另一个工具 arun（ https://github.com/ClarkGuan/arun ）：
 
 ```bash
-arun -exe build/android/armeabi-v7a/hello
+arun -exe build/android/app/armeabi-v7a/hello
 ```
 
 输出类似下面（我们假定您已经将 adb 命令加入到 $PATH 中）

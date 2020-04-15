@@ -21,15 +21,15 @@ Usage:
 
 Commands:
 
-	ddmobile   %!(EXTRA string=bind) build a library for Android and iOS
-	ddmobile   %!(EXTRA string=build) compile android APK and iOS app
-	ddmobile   %!(EXTRA string=build2) compile android shared library and iOS static library
-	ddmobile   %!(EXTRA string=clean) remove object files and cached ddmobile files
-	ddmobile   %!(EXTRA string=init) build OpenAL for Android
-	ddmobile   %!(EXTRA string=install) compile android APK and install on device
-	ddmobile   %!(EXTRA string=version) print version
+	bind        build a library for Android and iOS
+	build       compile android APK and iOS app
+	build2      compile android shared library and iOS static library
+	clean       remove object files and cached ddmobile files
+	init        build OpenAL for Android
+	install     compile android APK and install on device
+	version     print version
 
-Use '%!s(MISSING) help [command]' for more information about that command.
+Use 'ddmobile help [command]' for more information about that command.
 
 
 Build a library for Android and iOS
