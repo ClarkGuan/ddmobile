@@ -158,7 +158,9 @@ func goAndroidBuild2(pkg *packages.Package, androidArchs []string) (map[string]b
 			return nil, err
 		}
 		args = nil
-		if !buildExe {
+		if buildExe {
+			args = append(args, "-buildmode=pie")
+		} else {
 			args = append(args, "-buildmode=c-shared")
 		}
 		args = append(args, "-o", libAbsPath)
