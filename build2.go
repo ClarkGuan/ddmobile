@@ -199,7 +199,7 @@ func goIOSBuild2(pkg *packages.Package, bundleID string, archs []string) (map[st
 	for _, arch := range archs {
 		path := filepath.Join(tmpdir, arch)
 		// Disable DWARF; see golang.org/issues/25148.
-		if err := goBuild(src, darwinEnv[arch], "-ldflags=-w", "-buildmode=c-static", "-o="+path); err != nil {
+		if err := goBuild(src, darwinEnv[arch], "-ldflags=-w", "-buildmode=c-archive", "-o="+path); err != nil {
 			return nil, err
 		}
 		cmd.Args = append(cmd.Args, path)
