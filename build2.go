@@ -140,6 +140,9 @@ func goAndroidBuild2(pkg *packages.Package, androidArchs []string) (map[string]b
 	if buildO == "" {
 		buildO = "build"
 	}
+	if buildProName != "" {
+		libName = buildProName
+	}
 	args := []string(nil)
 	libPath := ""
 
@@ -182,6 +185,9 @@ func goIOSBuild2(pkg *packages.Package, bundleID string, archs []string) (map[st
 
 	if buildO == "" {
 		buildO = "build"
+	}
+	if buildProName != "" {
+		productName = buildProName
 	}
 
 	// We are using lipo tool to build multiarchitecture binaries.

@@ -229,6 +229,7 @@ var (
 	buildAndroidAPI int         // -androidapi
 	buildTags       stringsFlag // -tags
 	buildExe        bool        // -exe
+	buildProName    string      // -p
 )
 
 func addBuildFlags(cmd *command) {
@@ -245,6 +246,7 @@ func addBuildFlags(cmd *command) {
 	cmd.flag.BoolVar(&buildTrimpath, "trimpath", false, "")
 	cmd.flag.Var(&buildTags, "tags", "")
 	cmd.flag.BoolVar(&buildExe, "exe", false, "")
+	cmd.flag.StringVar(&buildProName, "p", "", "")
 }
 
 func addBuildFlagsNVXWork(cmd *command) {

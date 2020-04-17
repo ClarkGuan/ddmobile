@@ -131,7 +131,7 @@ $ ddmobile build2 -target android/arm -exe
 使用我编写的另一个工具 arun（ https://github.com/ClarkGuan/arun ）：
 
 ```
-$ GO111MODULE=0 go get -u github.com/ClarkGuan/arun
+$ GO111MODULE=off go get -u github.com/ClarkGuan/arun
 $ arun -exe build/android/app/armeabi-v7a/hello
 ```
 
@@ -155,4 +155,4 @@ Hello world
 * 2020-04-15
     * 创建分支 v1.1。该分支为 2019 年代码，支持 NDKr17～NDKr20 或更高的版本（最高支持版本未知）
     * 合并最新 gomobile 代码；将生成命令修改为 build2 以兼容 gomobile 已有功能
-    * 因为最大限度兼容 gomobile，所以去掉选项 -p；恢复了生成 bitcode 的功能
+    * 因为最大限度兼容 gomobile，所以恢复了生成 bitcode 的功能
