@@ -6,7 +6,7 @@ gomobile 的魔改版本。主要是不满意 gomobile 默认情况下直接构�
 
 ```
 $ cd <your-work-space>
-$ git clone github.com/ClarkGuan/ddmobile
+$ git clone https://github.com/ClarkGuan/ddmobile
 $ cd ddmobile
 $ go get
 $ go install
