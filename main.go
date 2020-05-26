@@ -166,6 +166,7 @@ var commands = []*command{
 	cmdBind,
 	cmdBuild,
 	cmdBuild2,
+	cmdTest,
 	cmdClean,
 	cmdInit,
 	cmdInstall,
