@@ -150,9 +150,11 @@ Hello world
 * 2019-09-05 去掉 iOS 生成的目标文件中的 bitcode 段（一是增大了包体积；二是仍然无法满足 Apple 100% bitcode 覆盖的要求）
 * 2019-10-10 创建分支 v1.0。该分支为 2018 年代码，支持 NDKr17 以及更早的版本
 * 2019-10-11
-    * 添加选项 -p，可以指定 Android 和 iOS 输出库文件的名称。例如 -p hello，对应 Android 动态库 libhello.so；对应 iOS 静态库 libhello.a
-    * 【Android SDK 内 NDK 目录名称又变化了】添加对 $NDK 环境变量的识别，优先使用该环境变了定位 NDK 的位置
+  * 添加选项 -p，可以指定 Android 和 iOS 输出库文件的名称。例如 -p hello，对应 Android 动态库 libhello.so；对应 iOS 静态库 libhello.a
+  * 【Android SDK 内 NDK 目录名称又变化了】添加对 $NDK 环境变量的识别，优先使用该环境变了定位 NDK 的位置
 * 2020-04-15
-    * 创建分支 v1.1。该分支为 2019 年代码，支持 NDKr17～NDKr20 或更高的版本（最高支持版本未知）
-    * 合并最新 gomobile 代码；将生成命令修改为 build2 以兼容 gomobile 已有功能
-    * 因为最大限度兼容 gomobile，所以恢复了生成 bitcode 的功能
+  * 创建分支 v1.1。该分支为 2019 年代码，支持 NDKr17～NDKr20 或更高的版本（最高支持版本未知）
+  * 合并最新 gomobile 代码；将生成命令修改为 build2 以兼容 gomobile 已有功能
+  * 因为最大限度兼容 gomobile，所以恢复了生成 bitcode 的功能
+* 2021-05-21
+  * 适配 Go 1.15+ 版本，移除之后对 iOS arm 和 386 平台的支持
