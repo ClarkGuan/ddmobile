@@ -395,6 +395,9 @@ func parseBuildTarget(buildTarget string) (os string, archs []string, _ error) {
 		targetOS = "darwin"
 	}
 	if all {
+		if isOver14() {
+			return targetOS, []string{"arm64", "amd64"}, nil
+		}
 		return targetOS, allArchs, nil
 	}
 	return targetOS, archs, nil

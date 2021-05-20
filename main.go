@@ -18,6 +18,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -38,7 +39,7 @@ func printUsage(w io.Writer) {
 }
 
 func main() {
-	gomobileName = os.Args[0]
+	gomobileName = filepath.Base(os.Args[0])
 	flag.Usage = func() {
 		printUsage(os.Stderr)
 		os.Exit(2)

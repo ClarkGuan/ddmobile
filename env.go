@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
+	"sync"
 )
 
 // General mobile build environment. Initialized by envInit.
@@ -58,7 +60,7 @@ func buildEnvInit() (cleanup func(), err error) {
 		tmpdir = "$WORK"
 		cleanupFn = func() {}
 	} else {
-		tmpdir, err = ioutil.TempDir("", gomobileName+"-work-")
+		tmpdir, err = os.MkdirTemp("", gomobileName+"-work-")
 		if err != nil {
 			return nil, err
 		}
@@ -72,6 +74,22 @@ func buildEnvInit() (cleanup func(), err error) {
 	}
 
 	return cleanupFn, nil
+}
+
+var judgeOnce = sync.Once{}
+var _isOver14 = false
+
+func isOver14() bool {
+	judgeOnce.Do(func() {
+		var versionRegex = regexp.MustCompile(`go\d+\.(\d+)(\.\d+)?`)
+		if submatch := versionRegex.FindStringSubmatch(runtime.Version()); len(submatch) >= 2 {
+			v, _ := strconv.Atoi(submatch[1])
+			if v > 14 {
+				_isOver14 = true
+			}
+		}
+	})
+	return _isOver14
 }
 
 func envInit() (err error) {
@@ -166,6 +184,11 @@ func envInit() (err error) {
 			"CGO_LDFLAGS="+cflags+" -arch "+archClang(arch),
 			"CGO_ENABLED=1",
 		)
+
+		if isOver14() && (arch == "arm" || arch == "386") {
+			continue
+		}
+
 		darwinEnv[arch] = env
 	}
 
